@@ -3,11 +3,12 @@ let bodyParser = require('body-parser');
 let cookieParser = require('cookie-parser');
 let session = require('express-session');
 let morgan = require('morgan');
-let User = require('./models/user');
+let Sequelize = require('sequelize');
+
 let alert = require('alert-node');
 let app = express();
 
-app.set('port', 9000);
+app.set('port', 8080);
 
 app.use(morgan('dev'));
 
@@ -45,38 +46,18 @@ let sessionChecker = (req, res, next) => {
 app.get('/', sessionChecker, (req, res) => {
     res.redirect('/login');
 });
-app.route('/signup')
-    .get(sessionChecker, (req, res) => {
-        res.sendFile(__dirname + '/public/signup.html');
-    })
-    .post((req, res) => {
-        User.create({
-            name: req.body.name,
-            surname: req.body.surname,
-            phone: req.body.phone,
-            email: req.body.email,
-            password: req.body.password,
-            status: req.body.status,
-            group: req.body.group
-        })
-            .then(user => {
-                req.session.user = user.dataValues;
-                res.redirect('/dashboard');
-            })
-            .catch(error => {
-                res.redirect('/signup');
-            });
-    });
+
 app.route('/login')
     .get(sessionChecker, (req, res) => {
         res.sendFile(__dirname + '/public/login.html');
     })
     .post((req, res) => {
+        
         let email = req.body.email,
             password = req.body.password;
-        let company = req.body.email.substr(req.body.email.indexOf("@") + 1, req.body.email.lastIndexOf(".") - req.body.email.indexOf("@") - 1);
-
-        console.log("data = ", req.body.email, req.body.password, company);
+         global.comp = req.body.email.substr(req.body.email.indexOf("@") + 1, req.body.email.lastIndexOf(".") - req.body.email.indexOf("@") - 1);
+         let User = require('./models/user');
+        console.log("data = ", global.comp);
 
         User.findOne({where: {email: email}}).then(function (user) {
             if (!user) {
@@ -89,6 +70,54 @@ app.route('/login')
             }
         });
     });
+
+
+app.route('/createadmin')
+    .get(sessionChecker, (req, res) => {
+        res.sendFile(__dirname + '/public/dashboardmain.html');
+    })
+    .post((req, res) => {
+        let User = require('./models/user');
+        User.create({
+            name: req.body.name,
+            surname: req.body.surname,
+            phone: req.body.phone,
+            email: req.body.email,
+            password: req.body.password,
+            status: req.body.status,
+            group: "admin"
+        })
+            .then(user => {
+             // req.session.user = user.dataValues;
+                res.redirect('/dashboard');
+            })
+            .catch(error => {
+                res.redirect('/dashboard');
+            });
+    });    
+    app.route('/createuser')
+    .get(sessionChecker, (req, res) => {
+        res.sendFile(__dirname + '/public/dashboarduser.html');
+    })
+    .post((req, res) => {
+        let User = require('./models/user');
+        User.create({
+            name: req.body.name,
+            surname: req.body.surname,
+            phone: req.body.phone,
+            email: req.body.email,
+            password: req.body.password,
+            status: req.body.status,
+            group: "user"
+        })
+            .then(user => {
+             // req.session.user = user.dataValues;
+                res.redirect('/dashboard');
+            })
+            .catch(error => {
+                res.redirect('/dashboard');
+            });
+    });    
 
 app.get('/dashboard', (req, res) => {
     if (req.session.user && req.cookies.user_sid) {
@@ -107,11 +136,13 @@ app.get('/dashboard', (req, res) => {
 
 app.get('/logout', (req, res) => {
     if (req.session.user && req.cookies.user_sid) {
+        
         res.clearCookie('user_sid');
         res.redirect('/');
-    } else {
+    } else 
+    {    
         res.redirect('/login');
-    }
+    }  
 });
 
 app.use(function (req, res, next) {

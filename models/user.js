@@ -1,10 +1,13 @@
 var Sequelize = require('sequelize');
 var bcrypt = require('bcrypt');
 
-var sequelize = new Sequelize('rk', 'postgres', 'Xtcyjr007', {
+//var company = require('../server.js');
+var company = global.comp;
+console.log("data111 = ", company);
+var sequelize = new Sequelize( company, 'postgres', 'Xtcyjr007', {
     host: '127.0.0.1',
     port: 5432,
-    dialect: 'postgres'
+    dialect: 'postgres',
   })
 
 var User = sequelize.define('users', {
@@ -54,5 +57,7 @@ sequelize.sync()
     .then(() => console.log('users table has been successfully created, if one doesn\'t exist'))
     .catch(error => console.log('This error occured', error));
 
+
+module.exports = sequelize;
 // export User model for use in other files.
 module.exports = User;

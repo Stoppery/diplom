@@ -21,6 +21,37 @@
 
         <div class="container row">
            <h1>Hi, Welcome to your Dashboard,MAIN</h1>
+           <div class="jumbotron col-sm-4 pull-center">
+            <form action="/createadmin" method="post">
+                <div>
+                    <label>Name:</label>
+                    <input type="text" name="name"/>
+                </div>
+                <div>
+                    <label>Surname:</label>
+                    <input type="text" name="surname"/>
+                </div>
+                <div>
+                    <label>Phone:</label>
+                    <input type="text" name="phone"/>
+                </div>
+                <div>
+                    <label>Email:</label>
+                    <input type="text" name="email"/>
+                </div>    
+                <div>
+                    <label>Password:</label>
+                    <input type="password" name="password"/>
+                </div>
+                <div>
+                    <label>Status:</label>
+                    <input type="text" name="status"/>
+                </div>
+                <div>
+                    <input class="btn btn-primary" type="submit" value="Create"/>
+                </div>
+            </form>                  
+        </div>          
         </div>
     </body>
 </html>
