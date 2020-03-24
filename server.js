@@ -1,21 +1,46 @@
-let express = require('express');
-let bodyParser = require('body-parser');
-let cookieParser = require('cookie-parser');
-let session = require('express-session');
-let morgan = require('morgan');
-let Sequelize = require('sequelize');
+const express = require('express');
+const bodyParser = require('body-parser');
+const cookieParser = require('cookie-parser');
+const session = require('express-session');
+const morgan = require('morgan');
+const db = require('./storage/database');
+const user = require('./storage/user');
+const app = express();
 
-let alert = require('alert-node');
-let app = express();
+class Storage {
+    constructor(PGHOST, PGUSER, PGPASSWORD, PGPORT) {
+        this.PGHOST = PGHOST;
+        this.PGUSER = PGUSER;
+        this.PGPASSWORD = PGPASSWORD;
+        this.PGPORT = PGPORT;
+        this.state = {};
+    }
+
+    createConnect(database) {
+        return db.database.dbConnect(this.PGHOST, this.PGUSER, database, this.PGPASSWORD, this.PGPORT);
+    }
+
+    createNewConnect(username, database) {
+        let conn = this.createConnect(database);
+        this.state[username] = conn;
+        return conn;
+    }
+
+    getUserConnect(username) {
+        return this.state[username]
+    }
+
+    disconnectUser(username) {
+        delete this.state[username]
+    }
+}
+
+let storage = new Storage('localhost', 'tsaanstu', 'Abc123456#', '5432');
 
 app.set('port', 8080);
-
 app.use(morgan('dev'));
-
 app.use(express.static('./public/'));
-
 app.use(bodyParser.urlencoded({extended: true}));
-
 app.use(cookieParser());
 
 app.use(session({
@@ -44,6 +69,7 @@ let sessionChecker = (req, res, next) => {
 };
 
 app.get('/', sessionChecker, (req, res) => {
+    db.database.test();
     res.redirect('/login');
 });
 
@@ -51,24 +77,24 @@ app.route('/login')
     .get(sessionChecker, (req, res) => {
         res.sendFile(__dirname + '/public/login.html');
     })
-    .post((req, res) => {
-        
+    .post(async (req, res) => {
+
         let email = req.body.email,
             password = req.body.password;
-         global.comp = req.body.email.substr(req.body.email.indexOf("@") + 1, req.body.email.lastIndexOf(".") - req.body.email.indexOf("@") - 1);
-         let User = require('./models/user');
-        console.log("data = ", global.comp);
+        let comp = req.body.email.substr(req.body.email.indexOf("@") + 1, req.body.email.lastIndexOf(".") - req.body.email.indexOf("@") - 1);
 
-        User.findOne({where: {email: email}}).then(function (user) {
-            if (!user) {
-                res.redirect('/login');
-            } else if (!user.validPassword(password)) {
+        let conn = storage.createNewConnect(email, comp);
+        let result = user.user.authorization(conn, email, password);
+
+        result.then(function (value) {
+            if (value.error != null) {
+                console.log("error = ", value.error);
                 res.redirect('/login');
             } else {
-                req.session.user = user.dataValues;
+                req.session.user = value.user;
                 res.redirect('/dashboard');
             }
-        });
+        })
     });
 
 
@@ -77,8 +103,8 @@ app.route('/createadmin')
         res.sendFile(__dirname + '/public/dashboardmain.html');
     })
     .post((req, res) => {
-        let User = require('./models/user');
-        User.create({
+        let conn = storage.getUserConnect(req.session.user.email);
+        user.user.createUser(conn, {
             name: req.body.name,
             surname: req.body.surname,
             phone: req.body.phone,
@@ -86,22 +112,16 @@ app.route('/createadmin')
             password: req.body.password,
             status: req.body.status,
             group: "admin"
-        })
-            .then(user => {
-             // req.session.user = user.dataValues;
-                res.redirect('/dashboard');
-            })
-            .catch(error => {
-                res.redirect('/dashboard');
-            });
-    });    
-    app.route('/createuser')
+        });
+        res.redirect('/dashboard');
+    });
+app.route('/createuser')
     .get(sessionChecker, (req, res) => {
         res.sendFile(__dirname + '/public/dashboarduser.html');
     })
     .post((req, res) => {
-        let User = require('./models/user');
-        User.create({
+        let conn = storage.getUserConnect(req.session.user.email);
+        user.user.createUser(conn, {
             name: req.body.name,
             surname: req.body.surname,
             phone: req.body.phone,
@@ -109,15 +129,9 @@ app.route('/createadmin')
             password: req.body.password,
             status: req.body.status,
             group: "user"
-        })
-            .then(user => {
-             // req.session.user = user.dataValues;
-                res.redirect('/dashboard');
-            })
-            .catch(error => {
-                res.redirect('/dashboard');
-            });
-    });    
+        });
+        res.redirect('/dashboard');
+    });
 
 app.get('/dashboard', (req, res) => {
     if (req.session.user && req.cookies.user_sid) {
@@ -136,13 +150,12 @@ app.get('/dashboard', (req, res) => {
 
 app.get('/logout', (req, res) => {
     if (req.session.user && req.cookies.user_sid) {
-        
+        storage.disconnectUser(req.session.user.email);
         res.clearCookie('user_sid');
         res.redirect('/');
-    } else 
-    {    
+    } else {
         res.redirect('/login');
-    }  
+    }
 });
 
 app.use(function (req, res, next) {
