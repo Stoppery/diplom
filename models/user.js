@@ -3,7 +3,7 @@ var bcrypt = require('bcrypt');
 
 //var company = require('../server.js');
 var company = global.comp;
-console.log("data111 = ", company);
+//console.log("data111 = ", company);
 var sequelize = new Sequelize( company, 'postgres', 'Xtcyjr007', {
     host: '127.0.0.1',
     port: 5432,

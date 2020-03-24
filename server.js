@@ -35,7 +35,7 @@ class Storage {
     }
 }
 
-let storage = new Storage('localhost', 'tsaanstu', 'Abc123456#', '5432');
+let storage = new Storage('localhost', 'postgres', 'Xtcyjr007', '5432');
 
 app.set('port', 8080);
 app.use(morgan('dev'));
@@ -69,7 +69,6 @@ let sessionChecker = (req, res, next) => {
 };
 
 app.get('/', sessionChecker, (req, res) => {
-    db.database.test();
     res.redirect('/login');
 });
 
@@ -103,7 +102,8 @@ app.route('/createadmin')
         res.sendFile(__dirname + '/public/dashboardmain.html');
     })
     .post((req, res) => {
-        let conn = storage.getUserConnect(req.session.user.email);
+        let comp = req.body.email.substr(req.body.email.indexOf("@") + 1, req.body.email.lastIndexOf(".") - req.body.email.indexOf("@") - 1);
+        let conn = storage.createConnect(comp);
         user.user.createUser(conn, {
             name: req.body.name,
             surname: req.body.surname,
