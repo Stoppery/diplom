@@ -6,6 +6,7 @@ const morgan = require('morgan');
 const db = require('./storage/database');
 const user = require('./storage/user');
 const app = express();
+const fs = require("fs");
 
 class Storage {
     constructor(PGHOST, PGUSER, PGPASSWORD, PGPORT) {
@@ -68,6 +69,7 @@ let sessionChecker = (req, res, next) => {
     }
 };
 
+
 app.get('/', sessionChecker, (req, res) => {
     res.redirect('/login');
 });
@@ -84,7 +86,6 @@ app.route('/login')
 
         let conn = storage.createNewConnect(email, comp);
         let result = user.user.authorization(conn, email, password);
-
         result.then(function (value) {
             if (value.error != null) {
                 console.log("error = ", value.error);
@@ -155,6 +156,38 @@ app.get('/logout', (req, res) => {
         res.redirect('/');
     } else {
         res.redirect('/login');
+    }
+});
+
+/*app.route('/profile')
+    .get((req, res) => {
+        res.sendFile(__dirname + '/public/profile.html');
+    })
+    .post((req, res) => {
+        let conn = storage.getUserConnect(req.session.user.email);
+        let email = req.session.user.email;
+        let profileData = user.user.profileUser(conn , email);
+        console.log(profileData)
+        res.redirect('/profile');
+    });
+*/
+    
+
+
+app.get('/profile', (req, res) => {
+    if (req.session.user && req.cookies.user_sid) {
+       let conn = storage.getUserConnect(req.session.user.email);
+       let email = req.session.user.email;
+       let profileData = user.user.profileUser(conn , email);
+       console.log(profileData[0]);
+       res.sendFile(__dirname + '/public/Profile.html');
+       //console.log(profileData[0].name);
+    }
+    else {
+        let conn = storage.getUserConnect(req.session.user.email);
+        let email = req.session.user.email;
+        let profileData = user.user.profileUser(conn , email);
+        //console.log(profileData[0]); // res.sendFile(__dirname + '/public/profile.html');
     }
 });
 

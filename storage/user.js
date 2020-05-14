@@ -35,5 +35,9 @@ module.exports.user = {
             user: null,
             error: "user not found"
         };
+    },
+   profileUser: function (conn,email) {
+        let dataProfile = conn.querySync(`SELECT name, surname, phone, email, status, "group" FROM users WHERE email = '${email}'`);
+        return (dataProfile);
     }
 };
