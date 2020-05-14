@@ -1,40 +1,21 @@
 {
-  "name": "dip_1_1",
-  "version": "1.0.0",
-  "description": "try to make my diplom",
-  "main": "index.js",
+  "name": "diplom2",
+  "version": "0.0.0",
   "scripts": {
-    "start": "node server.js",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "start": "node server"
   },
-  "author": "maxim",
-  "license": "ISC",
   "dependencies": {
-    "alert-node": "^3.0.9",
-    "bcrypt": "^4.0.1",
-    "bcryptjs": "^2.4.3",
-    "body-parser": "^1.19.0",
-    "cookie-parser": "^1.4.4",
-    "dotenv": "^8.2.0",
-    "express": "^4.17.1",
-    "express-flash": "0.0.2",
-    "express-session": "^1.17.0",
-    "fs": "0.0.1-security",
-    "jest": "^25.1.0",
-    "knex": "^0.20.10",
-    "mongoose": "^5.9.2",
-    "morgan": "^1.9.1",
-    "node-gyp": "^6.1.0",
-    "passport": "^0.4.1",
-    "path": "^0.12.7",
+    "cookie-parser": "~1.4.4",
+    "debug": "~2.6.9",
+    "express": "~4.16.1",
+    "jsonwebtoken": "^8.5.1",
+    "morgan": "~1.9.1",
     "pg": "^7.18.2",
     "pg-native": "^3.0.0",
     "pg-promise": "^10.4.4",
-    "pg-sync": "^0.2.0",
-    "request": "^2.88.2",
-    "sequelize": "^5.21.5",
-    "sqlite3": "^4.1.1",
-    "util": "^0.12.2",
-    "uuid": "^7.0.2"
+    "pg-sync": "^0.2.0"
+  },
+  "devDependencies": {
+    "bcrypt": "^4.0.1"
   }
 }

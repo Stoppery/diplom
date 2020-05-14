@@ -1,12 +1,15 @@
+'use strict';
+
 const express = require('express');
-const bodyParser = require('body-parser');
-const cookieParser = require('cookie-parser');
-const session = require('express-session');
-const morgan = require('morgan');
+const path = require('path');
+const app = express();
 const db = require('./storage/database');
 const user = require('./storage/user');
-const app = express();
-const fs = require("fs");
+const jwt = require('jsonwebtoken');
+const cookieParser = require('cookie-parser');
+
+const publicURL = __dirname + "/public/";
+const secretWord = "kek";
 
 class Storage {
     constructor(PGHOST, PGUSER, PGPASSWORD, PGPORT) {
@@ -36,163 +39,99 @@ class Storage {
     }
 }
 
-let storage = new Storage('localhost', 'postgres', 'Xtcyjr007', '5432');
+let storage = new Storage('localhost', 'tsaanstu', 'Abc123456#', '5432');
 
-app.set('port', 8080);
-app.use(morgan('dev'));
-app.use(express.static('./public/'));
-app.use(bodyParser.urlencoded({extended: true}));
+app.use(express.static(path.join(__dirname, '/public/')));
+app.use(express.json());
 app.use(cookieParser());
 
-app.use(session({
-    key: 'user_sid',
-    secret: 'somerandonstuffs',
-    resave: false,
-    saveUninitialized: false,
-    cookie: {
-        expires: 600000
-    }
-}));
+//  КЛИЕНТСКАЯ ЧАСТЬ
 
-app.use((req, res, next) => {
-    if (req.cookies.user_sid && !req.session.user) {
-        res.clearCookie('user_sid');
-    }
-    next();
-});
-
-let sessionChecker = (req, res, next) => {
-    if (req.session.user && req.cookies.user_sid) {
-        res.redirect('/dashboard');
-    } else {
-        next();
-    }
-};
-
-
-app.get('/', sessionChecker, (req, res) => {
+app.get('/', (req, res) => {
     res.redirect('/login');
 });
 
-app.route('/login')
-    .get(sessionChecker, (req, res) => {
-        res.sendFile(__dirname + '/public/login.html');
-    })
-    .post(async (req, res) => {
-
-        let email = req.body.email,
-            password = req.body.password;
-        let comp = req.body.email.substr(req.body.email.indexOf("@") + 1, req.body.email.lastIndexOf(".") - req.body.email.indexOf("@") - 1);
-
-        let conn = storage.createNewConnect(email, comp);
-        let result = user.user.authorization(conn, email, password);
-        result.then(function (value) {
-            if (value.error != null) {
-                console.log("error = ", value.error);
-                res.redirect('/login');
-            } else {
-                req.session.user = value.user;
-                res.redirect('/dashboard');
-            }
-        })
-    });
-
-
-app.route('/createadmin')
-    .get(sessionChecker, (req, res) => {
-        res.sendFile(__dirname + '/public/dashboardmain.html');
-    })
-    .post((req, res) => {
-        let comp = req.body.email.substr(req.body.email.indexOf("@") + 1, req.body.email.lastIndexOf(".") - req.body.email.indexOf("@") - 1);
-        let conn = storage.createConnect(comp);
-        user.user.createUser(conn, {
-            name: req.body.name,
-            surname: req.body.surname,
-            phone: req.body.phone,
-            email: req.body.email,
-            password: req.body.password,
-            status: req.body.status,
-            group: "admin"
-        });
-        res.redirect('/dashboard');
-    });
-app.route('/createuser')
-    .get(sessionChecker, (req, res) => {
-        res.sendFile(__dirname + '/public/dashboarduser.html');
-    })
-    .post((req, res) => {
-        let conn = storage.getUserConnect(req.session.user.email);
-        user.user.createUser(conn, {
-            name: req.body.name,
-            surname: req.body.surname,
-            phone: req.body.phone,
-            email: req.body.email,
-            password: req.body.password,
-            status: req.body.status,
-            group: "user"
-        });
-        res.redirect('/dashboard');
-    });
+app.get('/login', (req, res) => {
+    res.sendFile(publicURL + '/login/login.html');
+});
 
 app.get('/dashboard', (req, res) => {
-    if (req.session.user && req.cookies.user_sid) {
-        let proverka = req.session.user.group;
-        if (proverka == 'main') {
-            res.sendFile(__dirname + '/public/dashboardmain.html');
-        } else if (proverka == 'admin') {
-            res.sendFile(__dirname + '/public/dashboardadmin.html');
+    let decoded = jwt.decode(req.cookies.user);
+
+    if (req.cookies.user) {
+        console.log(`if: ${decoded.group}`);
+        if (decoded.group === 'main') {
+            res.sendFile(publicURL + '/dashboard/dashboardmain.html');
+        } else if (decoded.group === 'admin') {
+            res.sendFile(publicURL + '/dashboard/dashboardadmin.html');
         } else {
-            res.sendFile(__dirname + '/public/dashboarduser.html');
+            res.sendFile(publicURL + '/dashboard/dashboarduser.html');
         }
     } else {
         res.redirect('/login');
     }
 });
 
-app.get('/logout', (req, res) => {
-    if (req.session.user && req.cookies.user_sid) {
-        storage.disconnectUser(req.session.user.email);
-        res.clearCookie('user_sid');
+//  СЕРВЕРНАЯ ЧАСТЬ
+
+
+app.post('/api/login', async function (req, res) {
+    let email = req.body.email,
+        password = req.body.password;
+    let comp = req.body.email.substr(req.body.email.indexOf("@") + 1, req.body.email.lastIndexOf(".") - req.body.email.indexOf("@") - 1);
+
+    let conn = storage.createNewConnect(email, comp);
+    let result = user.user.authorization(conn, email, password);
+    await result.then(function (value) {
+        if (value.error != null) {
+            console.log("error = ", value.error);
+            res.status(401);
+            res.json({error: "Введены некорректные данные"});
+        } else {
+            let token = jwt.sign({
+                email: value.user.email,
+                group: value.user.group,
+                comp: comp
+            }, secretWord);
+            res.cookie('user', token, {httpOnly: true, secure: false, maxAge: 500 * 3600000});
+            res.status(200);
+            res.write("success");
+        }
+    });
+});
+
+app.get('/api/logout', (req, res) => {
+    let decoded = jwt.decode(req.cookies.user);
+    if (req.cookies.user) {
+        storage.disconnectUser(decoded.email);
+        res.clearCookie('user');
         res.redirect('/');
     } else {
         res.redirect('/login');
     }
 });
 
-/*app.route('/profile')
-    .get((req, res) => {
-        res.sendFile(__dirname + '/public/profile.html');
-    })
-    .post((req, res) => {
-        let conn = storage.getUserConnect(req.session.user.email);
-        let email = req.session.user.email;
-        let profileData = user.user.profileUser(conn , email);
-        console.log(profileData)
-        res.redirect('/profile');
-    });
-*/
-    
+// app.route('/createadmin')
+//     .get(sessionChecker, (req, res) => {
+//         //  тут будет получение данных пользователя
+//     })
+//     .post((req, res) => {
+//         let comp = req.body.email.substr(req.body.email.indexOf("@") + 1, req.body.email.lastIndexOf(".") - req.body.email.indexOf("@") - 1);
+//         let conn = storage.createConnect(comp);
+//         user.user.createUser(conn, {
+//             name: req.body.name,
+//             surname: req.body.surname,
+//             phone: req.body.phone,
+//             email: req.body.email,
+//             password: req.body.password,
+//             status: req.body.status,
+//             group: "admin"
+//         });
+//         res.redirect('/dashboard');
+//     });
 
+let port = process.env.PORT || 3000;
 
-app.get('/profile', (req, res) => {
-    if (req.session.user && req.cookies.user_sid) {
-       let conn = storage.getUserConnect(req.session.user.email);
-       let email = req.session.user.email;
-       let profileData = user.user.profileUser(conn , email);
-       console.log(profileData[0]);
-       res.sendFile(__dirname + '/public/Profile.html');
-       //console.log(profileData[0].name);
-    }
-    else {
-        let conn = storage.getUserConnect(req.session.user.email);
-        let email = req.session.user.email;
-        let profileData = user.user.profileUser(conn , email);
-        //console.log(profileData[0]); // res.sendFile(__dirname + '/public/profile.html');
-    }
+app.listen(port, function () {
+    console.log(`Server listening port ${port}`);
 });
-
-app.use(function (req, res, next) {
-    res.status(404).send("Sorry can't find that!")
-});
-
-app.listen(app.get('port'), () => console.log(`App started on port ${app.get('port')}`));
