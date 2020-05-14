@@ -7,6 +7,7 @@ const db = require('./storage/database');
 const user = require('./storage/user');
 const jwt = require('jsonwebtoken');
 const cookieParser = require('cookie-parser');
+const HttpStatus = require('http-status-codes');
 
 const publicURL = __dirname + "/public/";
 const secretWord = "kek";
@@ -22,20 +23,6 @@ class Storage {
 
     createConnect(database) {
         return db.database.dbConnect(this.PGHOST, this.PGUSER, database, this.PGPASSWORD, this.PGPORT);
-    }
-
-    createNewConnect(username, database) {
-        let conn = this.createConnect(database);
-        this.state[username] = conn;
-        return conn;
-    }
-
-    getUserConnect(username) {
-        return this.state[username]
-    }
-
-    disconnectUser(username) {
-        delete this.state[username]
     }
 }
 
@@ -56,10 +43,13 @@ app.get('/login', (req, res) => {
 });
 
 app.get('/dashboard', (req, res) => {
+    if (!req.cookies.user) {
+        res.status(HttpStatus.UNAUTHORIZED);
+        res.json({error: "Необходима авторизация"});
+    }
     let decoded = jwt.decode(req.cookies.user);
 
     if (req.cookies.user) {
-        console.log(`if: ${decoded.group}`);
         if (decoded.group === 'main') {
             res.sendFile(publicURL + '/dashboard/dashboardmain.html');
         } else if (decoded.group === 'admin') {
@@ -76,16 +66,20 @@ app.get('/dashboard', (req, res) => {
 
 
 app.post('/api/login', async function (req, res) {
+    if (!req.body.email || !req.body.password) {
+        res.status(HttpStatus.BAD_REQUEST);
+        res.json({error: "Введены некорректные данные"});
+    }
+
     let email = req.body.email,
         password = req.body.password;
     let comp = req.body.email.substr(req.body.email.indexOf("@") + 1, req.body.email.lastIndexOf(".") - req.body.email.indexOf("@") - 1);
 
-    let conn = storage.createNewConnect(email, comp);
+    let conn = storage.createConnect(comp);
     let result = user.user.authorization(conn, email, password);
     await result.then(function (value) {
         if (value.error != null) {
-            console.log("error = ", value.error);
-            res.status(401);
+            res.status(HttpStatus.UNAUTHORIZED);
             res.json({error: "Введены некорректные данные"});
         } else {
             let token = jwt.sign({
@@ -94,7 +88,7 @@ app.post('/api/login', async function (req, res) {
                 comp: comp
             }, secretWord);
             res.cookie('user', token, {httpOnly: true, secure: false, maxAge: 500 * 3600000});
-            res.status(200);
+            res.status(HttpStatus.OK);
             res.write("success");
         }
     });
@@ -103,7 +97,6 @@ app.post('/api/login', async function (req, res) {
 app.get('/api/logout', (req, res) => {
     let decoded = jwt.decode(req.cookies.user);
     if (req.cookies.user) {
-        storage.disconnectUser(decoded.email);
         res.clearCookie('user');
         res.redirect('/');
     } else {
@@ -111,24 +104,43 @@ app.get('/api/logout', (req, res) => {
     }
 });
 
-// app.route('/createadmin')
-//     .get(sessionChecker, (req, res) => {
-//         //  тут будет получение данных пользователя
-//     })
-//     .post((req, res) => {
-//         let comp = req.body.email.substr(req.body.email.indexOf("@") + 1, req.body.email.lastIndexOf(".") - req.body.email.indexOf("@") - 1);
-//         let conn = storage.createConnect(comp);
-//         user.user.createUser(conn, {
-//             name: req.body.name,
-//             surname: req.body.surname,
-//             phone: req.body.phone,
-//             email: req.body.email,
-//             password: req.body.password,
-//             status: req.body.status,
-//             group: "admin"
-//         });
-//         res.redirect('/dashboard');
-//     });
+app.route('/api/user')
+    .get((req, res) => {
+        //  тут будет получение данных пользователя
+    })
+    .post((req, res) => {
+        if (!req.cookies.user) {
+            res.status(HttpStatus.UNAUTHORIZED);
+            res.json({error: "Необходима авторизация"});
+        }
+
+        let decoded = jwt.decode(req.cookies.user);
+        let userGroup = "";
+        let company = decoded.comp;
+
+        switch (decoded.group) {
+            case "admin":
+                userGroup = "user";
+                break;
+            default:
+                userGroup = "admin";
+                company = req.body.email.substr(req.body.email.indexOf("@") + 1, req.body.email.lastIndexOf(".") - req.body.email.indexOf("@") - 1);
+                break;
+        }
+
+        let conn = storage.createConnect(company);
+
+        user.user.createUser(conn, {
+            name: req.body.name,
+            surname: req.body.surname,
+            phone: req.body.phone,
+            email: req.body.email,
+            password: req.body.password,
+            status: req.body.status,
+            group: userGroup,
+        });
+        res.redirect('/dashboard');
+    });
 
 let port = process.env.PORT || 3000;
 

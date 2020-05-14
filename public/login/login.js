@@ -1,5 +1,4 @@
 function login(event) {
-    console.log("FRONT LOGIN");
     event.preventDefault();
     let passwordInput = document.getElementById("password");
     let emailInput = document.getElementById("email");
@@ -26,17 +25,4 @@ function login(event) {
             window.location.href = "/dashboard";
         }
     })
-    //     .then(result => {
-    //         console.log(result);
-    //
-    //         let block = document.getElementById("testInput");
-    //         block.innerText = result.ber4un;
-    //     });
-    //
-    //
-    // let test = document.getElementById("email");
-    //
-    //
-    //
-    // console.log(test.value.substr(test.value.indexOf("@")+1, test.value.lastIndexOf(".") - test.value.indexOf("@")-1))
 }
