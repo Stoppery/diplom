@@ -26,7 +26,7 @@ class Storage {
     }
 }
 
-let storage = new Storage('localhost', 'tsaanstu', 'Abc123456#', '5432');
+let storage = new Storage('localhost', 'postgres', 'Xtcyjr007', '5432');
 
 app.use(express.static(path.join(__dirname, '/public/')));
 app.use(express.json());
