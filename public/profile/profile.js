@@ -9,7 +9,7 @@ function getProfile() {
         method: 'GET',
         headers: {
             'Content-Type': 'application/json',
-            'Charset': 'utf-8'
+            'Charset': 'utf-8',
         },
     }).then(response => {
         if (response.status !== 200) {
