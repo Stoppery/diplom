@@ -8,6 +8,31 @@ module.exports.user = {
             `VALUES ('${user.name}', '${user.surname}', '${user.phone}', '${user.email}', '${passwordHash}', '${user.status}', '${user.group}');`);
     },
 
+    getUsers: function (conn, group) {
+        let rows = conn.querySync(`SELECT name, surname, phone, email, status, "group" FROM users WHERE "group" = '${group}'`);
+        let result = {
+            users: [],
+            error: null,
+        };
+
+        if (rows.length > 0) {
+            for (let i = 0; i < rows.length; i++) {
+                result.users.push({
+                    name: rows[i].name,
+                    surname: rows[i].surname,
+                    phone: rows[i].phone,
+                    email: rows[i].email,
+                    status: rows[i].status,
+                    group: rows[i].group,
+                })
+            }
+            return result;
+        }
+
+        result.error = "cant get users";
+        return result
+    },
+
     authorization: async function (conn, username, password) {
         let rows = conn.querySync(`SELECT name, surname, phone, email, password, status, "group" FROM users WHERE email = '${username}'`);
         if (rows.length > 0) {
@@ -35,6 +60,10 @@ module.exports.user = {
             user: null,
             error: "user not found"
         };
+    },
+
+    deleteUser: function (conn, email) {
+        conn.querySync(`DELETE FROM users WHERE email = '${email}'`);
     },
 
     getUser: function (conn, email) {

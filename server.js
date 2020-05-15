@@ -26,7 +26,7 @@ class Storage {
     }
 }
 
-let storage = new Storage('localhost', 'postgres', 'Xtcyjr007', '5432');
+let storage = new Storage('localhost', 'tsaanstu', 'Abc123456#', '5432');
 
 app.use(express.static(path.join(__dirname, '/public/')));
 app.use(express.json());
@@ -46,9 +46,13 @@ app.get('/profile', (req, res) => {
     res.sendFile(publicURL + '/profile/profile.html');
 });
 
+app.get('/adminpanel', (req, res) => {
+    res.sendFile(publicURL + '/adminpanel/adminpanel.html');
+});
+
 app.get('/dashboard', (req, res) => {
     if (!req.cookies.user) {
-        res.status(HttpStatus.UNAUTHORIZED);
+        res.sendStatus(HttpStatus.UNAUTHORIZED);
         res.json({error: "Необходима авторизация"});
     }
     let decoded = jwt.decode(req.cookies.user);
@@ -109,16 +113,37 @@ app.get('/api/logout', (req, res) => {
     }
 });
 
+app.route('/api/showUsers')
+    .get(function (req, res) {
+        if (!req.cookies.user) {
+            res.sendStatus(HttpStatus.UNAUTHORIZED);
+            res.json({error: "Необходима авторизация"});
+            return
+        }
+
+        let decoded = jwt.decode(req.cookies.user);
+        let conn = storage.createConnect(decoded.comp);
+
+        let usersData = user.user.getUsers(conn, "user");
+        if (usersData.error) {
+            // res.sendStatus(HttpStatus.INTERNAL_SERVER_ERROR);
+            res.json({error: usersData.error});
+        } else {
+            // res.sendStatus(HttpStatus.OK);
+            res.json({users: usersData.users});
+        }
+    });
+
 app.route('/api/user')
     .get((req, res) => {
         if (!req.cookies.user) {
-            res.status(HttpStatus.UNAUTHORIZED);
+            res.sendStatus(HttpStatus.UNAUTHORIZED);
             res.json({error: "Необходима авторизация"});
             return
         }
 
         if (!req.body.email) {
-            res.status(HttpStatus.BAD_REQUEST);
+            res.sendStatus(HttpStatus.BAD_REQUEST);
             res.json({error: "Некорректные данные"});
             return
         }
@@ -128,15 +153,42 @@ app.route('/api/user')
 
         let userData = user.user.getUser(conn, req.body.email);
         if (userData.error) {
-            res.status(HttpStatus.NOT_FOUND);
+            res.sendStatus(HttpStatus.NOT_FOUND);
             res.json({error: userData.error});
         } else {
             res.json(userData.user);
         }
     })
+    .delete((req, res) => {
+        if (!req.cookies.user) {
+            res.sendStatus(HttpStatus.UNAUTHORIZED);
+            res.json({error: "Необходима авторизация"});
+            return
+        }
+
+        let decoded = jwt.decode(req.cookies.user);
+        if (decoded.group !== "admin") {
+            res.sendStatus(HttpStatus.UNAUTHORIZED);
+            res.json({error: "Необходима авторизация"});
+            return
+        }
+
+        let email = req.query.email;
+        if (email === "") {
+            res.sendStatus(HttpStatus.BAD_REQUEST);
+            res.json({error: "Неверные параметры"});
+            return
+        }
+
+        let conn = storage.createConnect(decoded.comp);
+
+        user.user.deleteUser(conn, email);
+        res.sendStatus(HttpStatus.OK);
+        res.send(`Пользователь ${email} удалён`);
+    })
     .post((req, res) => {
         if (!req.cookies.user) {
-            res.status(HttpStatus.UNAUTHORIZED);
+            res.sendStatus(HttpStatus.UNAUTHORIZED);
             res.json({error: "Необходима авторизация"});
             return
         }
@@ -172,7 +224,7 @@ app.route('/api/user')
 app.route('/api/profile')
     .get((req, res) => {
         if (!req.cookies.user) {
-            res.status(HttpStatus.UNAUTHORIZED);
+            res.sendStatus(HttpStatus.UNAUTHORIZED);
             res.json({error: "Необходима авторизация"});
             return
         }
@@ -182,7 +234,7 @@ app.route('/api/profile')
 
         let userData = user.user.getUser(conn, decoded.email);
         if (userData.error) {
-            res.status(HttpStatus.NOT_FOUND);
+            res.sendStatus(HttpStatus.NOT_FOUND);
             res.json({error: userData.error});
         } else {
             res.json(userData.user);
