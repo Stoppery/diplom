@@ -42,6 +42,10 @@ app.get('/login', (req, res) => {
     res.sendFile(publicURL + '/login/login.html');
 });
 
+app.get('/profile', (req, res) => {
+    res.sendFile(publicURL + '/profile/profile.html');
+});
+
 app.get('/dashboard', (req, res) => {
     if (!req.cookies.user) {
         res.status(HttpStatus.UNAUTHORIZED);
