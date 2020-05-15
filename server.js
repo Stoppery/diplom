@@ -69,6 +69,7 @@ app.post('/api/login', async function (req, res) {
     if (!req.body.email || !req.body.password) {
         res.status(HttpStatus.BAD_REQUEST);
         res.json({error: "Введены некорректные данные"});
+        return
     }
 
     let email = req.body.email,
@@ -106,12 +107,34 @@ app.get('/api/logout', (req, res) => {
 
 app.route('/api/user')
     .get((req, res) => {
-        //  тут будет получение данных пользователя
+        if (!req.cookies.user) {
+            res.status(HttpStatus.UNAUTHORIZED);
+            res.json({error: "Необходима авторизация"});
+            return
+        }
+
+        if (!req.body.email) {
+            res.status(HttpStatus.BAD_REQUEST);
+            res.json({error: "Некорректные данные"});
+            return
+        }
+
+        let decoded = jwt.decode(req.cookies.user);
+        let conn = storage.createConnect(decoded.comp);
+
+        let userData = user.user.getUser(conn, req.body.email);
+        if (userData.error) {
+            res.status(HttpStatus.NOT_FOUND);
+            res.json({error: userData.error});
+        } else {
+            res.json(userData.user);
+        }
     })
     .post((req, res) => {
         if (!req.cookies.user) {
             res.status(HttpStatus.UNAUTHORIZED);
             res.json({error: "Необходима авторизация"});
+            return
         }
 
         let decoded = jwt.decode(req.cookies.user);
@@ -140,6 +163,26 @@ app.route('/api/user')
             group: userGroup,
         });
         res.redirect('/dashboard');
+    });
+
+app.route('/api/profile')
+    .get((req, res) => {
+        if (!req.cookies.user) {
+            res.status(HttpStatus.UNAUTHORIZED);
+            res.json({error: "Необходима авторизация"});
+            return
+        }
+
+        let decoded = jwt.decode(req.cookies.user);
+        let conn = storage.createConnect(decoded.comp);
+
+        let userData = user.user.getUser(conn, decoded.email);
+        if (userData.error) {
+            res.status(HttpStatus.NOT_FOUND);
+            res.json({error: userData.error});
+        } else {
+            res.json(userData.user);
+        }
     });
 
 let port = process.env.PORT || 3000;

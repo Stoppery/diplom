@@ -36,8 +36,26 @@ module.exports.user = {
             error: "user not found"
         };
     },
-   profileUser: function (conn,email) {
-        let dataProfile = conn.querySync(`SELECT name, surname, phone, email, status, "group" FROM users WHERE email = '${email}'`);
-        return (dataProfile);
+
+    getUser: function (conn, email) {
+        let rows = conn.querySync(`SELECT name, surname, phone, email, status, "group" FROM users WHERE email = '${email}'`);
+        if (rows.length > 0) {
+            return {
+                user: {
+                    name: rows[0].name,
+                    surname: rows[0].surname,
+                    phone: rows[0].phone,
+                    email: rows[0].email,
+                    status: rows[0].status,
+                    group: rows[0].group,
+                },
+                error: null
+            };
+        }
+
+        return {
+            user: null,
+            error: "user not found"
+        };
     }
 };
