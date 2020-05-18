@@ -1,4 +1,9 @@
-
+/*!
+ * Bootstrap v3.3.7 (http://getbootstrap.com)
+ * Copyright 2011-2016 Twitter, Inc.
+ * Licensed under MIT (https://github.com/twbs/bootstrap/blob/master/LICENSE)
+ */
+/*! normalize.css v3.0.3 | MIT License | github.com/necolas/normalize.css */
 html {
     font-family: sans-serif;
     -webkit-text-size-adjust: 100%;
@@ -185,8 +190,9 @@ table {
 td, th {
     padding:0
 }
+/*! Source: https://github.com/h5bp/html5-boilerplate/blob/master/src/css/main.css */
 
-/*! Source: https://github.com/h5bp/html5-boilerplate/blob/master/src/css/main.css */@media print {
+@media print {
     *, :after, :before {
         color: #000 !important;
         text-shadow: none !important;
@@ -1443,13 +1449,13 @@ hr {
 
 .h1, .h2, .h3, .h4, .h5, .h6, h1, h2, h3, h4, h5, h6 {
     font-family: inherit;
-    font-weight: 500;
+    font-weight: 100;
     line-height: 1.1;
     color:inherit
 }
 
 .h1 .small, .h1 small, .h2 .small, .h2 small, .h3 .small, .h3 small, .h4 .small, .h4 small, .h5 .small, .h5 small, .h6 .small, .h6 small, h1 .small, h1 small, h2 .small, h2 small, h3 .small, h3 small, h4 .small, h4 small, h5 .small, h5 small, h6 .small, h6 small {
-    font-weight: 400;
+    font-weight: 100;
     line-height: 1;
     color:#777
 }
@@ -2878,10 +2884,9 @@ legend {
 }
 
 label {
-    display: inline-block;
-    max-width: 100%;
+    display: table-row;
     margin-bottom: 5px;
-    font-weight:700
+    font-weight:400
 }
 
 input[type=search] {
@@ -3374,7 +3379,9 @@ select[multiple].input-lg, textarea.input-lg {
 
 .btn {
     display: inline-block;
+    margin-left: 220px;
     padding: 6px 12px;
+    margin-top: -50px;
     margin-bottom: 0;
     font-size: 14px;
     font-weight: 400;
@@ -5343,9 +5350,9 @@ a.badge:focus, a.badge:hover {
 }
 
 .jumbotron {
-    padding-top: 30px;
-    padding-bottom: 30px;
-    margin-bottom: 30px;
+    padding-top: 10px;
+    padding-bottom: 10px;
+    margin-bottom: 5px;
     color: inherit;
     background-color:#eee
 }
@@ -5367,7 +5374,7 @@ a.badge:focus, a.badge:hover {
 .container .jumbotron, .container-fluid .jumbotron {
     padding-right: 15px;
     padding-left: 15px;
-    border-radius:6px
+    border-radius:6px;
 }
 
 .jumbotron .container {
@@ -5376,8 +5383,8 @@ a.badge:focus, a.badge:hover {
 
 @media screen and (min-width: 768px) {
     .jumbotron {
-        padding-top: 48px;
-        padding-bottom:48px
+        padding-top: 18px;
+        padding-bottom:18px
     }
 
     .container .jumbotron, .container-fluid .jumbotron {
@@ -7205,4 +7212,4 @@ button.close {
         display: none !important
     }
 }
-
+/*# sourceMappingURL=bootstrap.min.css.map */
