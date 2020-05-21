@@ -8,6 +8,11 @@ module.exports.user = {
             `VALUES ('${user.name}', '${user.surname}', '${user.phone}', '${user.email}', '${passwordHash}', '${user.status}', '${user.group}');`);
     },
 
+    updateUserPassword: function (conn, email, password) {
+        let passwordHash = bcrypt.hashSync(password, bcrypt.genSaltSync(10));
+        conn.querySync(`UPDATE users SET password = '${passwordHash}' WHERE email = '${email}';`);
+    },
+
     getUsers: function (conn, group) {
         let rows = conn.querySync(`SELECT name, surname, phone, email, status, "group" FROM users WHERE "group" = '${group}'`);
         let result = {

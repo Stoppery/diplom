@@ -89,11 +89,11 @@ app.get('/api/admin/check', (req, res) => {
 
     let decoded = jwt.decode(req.cookies.user);
 
-    if (decoded.group === "user") {
-        res.sendStatus(HttpStatus.UNAUTHORIZED);
+    if (decoded.group === "admin") {
+        res.sendStatus(HttpStatus.OK);
         return
     }
-    res.sendStatus(HttpStatus.OK);
+    res.sendStatus(HttpStatus.UNAUTHORIZED);
 });
 
 app.post('/api/login', async function (req, res) {
@@ -151,6 +151,25 @@ app.route('/api/showUsers')
         } else {
             res.status(HttpStatus.OK).json({users: usersData.users});
         }
+    });
+
+app.route('/api/user/password')
+    .post((req, res) => {
+        if (!req.cookies.user) {
+            res.status(HttpStatus.UNAUTHORIZED).json({error: "Необходима авторизация"});
+            return
+        }
+
+        if (!req.body.password) {
+            res.status(HttpStatus.BAD_REQUEST).json({error: "Некорректные данные"});
+            return
+        }
+
+        let decoded = jwt.decode(req.cookies.user);
+        let conn = storage.createConnect(decoded.comp);
+
+        user.user.updateUserPassword(conn, decoded.email, req.body.password);
+        res.sendStatus(HttpStatus.OK)
     });
 
 app.route('/api/user')
