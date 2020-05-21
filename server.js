@@ -81,6 +81,20 @@ app.get('/dashboard', (req, res) => {
 
 //  СЕРВЕРНАЯ ЧАСТЬ
 
+app.get('/api/admin/check', (req, res) => {
+    if (!req.cookies.user) {
+        res.status(HttpStatus.UNAUTHORIZED).json({error: "Необходима авторизация"});
+        return
+    }
+
+    let decoded = jwt.decode(req.cookies.user);
+
+    if (decoded.group === "user") {
+        res.sendStatus(HttpStatus.UNAUTHORIZED);
+        return
+    }
+    res.sendStatus(HttpStatus.OK);
+});
 
 app.post('/api/login', async function (req, res) {
     if (!req.body.email || !req.body.password) {

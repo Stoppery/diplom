@@ -14,7 +14,25 @@ function deleteUser(email) {
     getUsers();
 }
 
-function getUsers() {
+async function getUsers() {
+    let status;
+    await fetch('http://localhost:3000/api/admin/check', {
+        method: 'GET',
+        headers: {
+            'Content-Type': 'application/json',
+            'Charset': 'utf-8'
+        },
+    }).then(response => {
+        console.log("1");
+        if (response.status !== 200) {
+            status = false;
+            return
+        }
+        status = true;
+    });
+
+    console.log("2");
+
     fetch('http://localhost:3000/api/showUsers', {
         method: 'GET',
         headers: {
@@ -33,11 +51,6 @@ function getUsers() {
                 let tdEmail = document.createElement("td");
                 let tdStatus = document.createElement("td");
 
-                let button = document.createElement("input");
-                button.type = "button";
-                button.addEventListener("click", () => deleteUser(response.users[i].email));
-                button.value = "Удалить";
-
                 tdName.innerText = response.users[i].name;
                 tdSurname.innerText = response.users[i].surname;
                 tdPhone.innerText = response.users[i].phone;
@@ -49,7 +62,13 @@ function getUsers() {
                 tr.appendChild(tdPhone);
                 tr.appendChild(tdEmail);
                 tr.appendChild(tdStatus);
-                tr.appendChild(button);
+                if (status) {
+                    let button = document.createElement("input");
+                    button.type = "button";
+                    button.addEventListener("click", () => deleteUser(response.users[i].email));
+                    button.value = "Удалить";
+                    tr.appendChild(button);
+                }
 
                 table.appendChild(tr);
             }
