@@ -8,6 +8,20 @@ module.exports.user = {
             `VALUES ('${user.name}', '${user.surname}', '${user.phone}', '${user.email}', '${passwordHash}', '${user.status}', '${user.group}');`);
     },
 
+    checkSubscribe: function (conn, email) {
+        let rows = conn.querySync(`SELECT subscribe FROM users WHERE email = '${email}' AND subscribe >= NOW()`);
+        return rows.length > 0
+    },
+
+    renewSubscribeForMonth: function (conn) {
+        conn.querySync(`UPDATE users SET subscribe = NOW() + interval '1 month'`);
+    },
+
+    updateUserPassword: function (conn, email, password) {
+        let passwordHash = bcrypt.hashSync(password, bcrypt.genSaltSync(10));
+        conn.querySync(`UPDATE users SET password = '${passwordHash}' WHERE email = '${email}';`);
+    },
+
     getUsers: function (conn, group) {
         let rows = conn.querySync(`SELECT name, surname, phone, email, status, "group" FROM users WHERE "group" = '${group}'`);
         let result = {
