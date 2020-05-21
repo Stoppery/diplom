@@ -81,6 +81,45 @@ app.get('/dashboard', (req, res) => {
 
 //  СЕРВЕРНАЯ ЧАСТЬ
 
+app.route('/api/subscribe')
+    .get(function (req, res) {
+        if (!req.cookies.user) {
+            res.status(HttpStatus.UNAUTHORIZED).json({error: "Необходима авторизация"});
+            return
+        }
+
+        let decoded = jwt.decode(req.cookies.user);
+        let email = decoded.email;
+        let comp = email.substr(email.indexOf("@") + 1, email.lastIndexOf(".") - email.indexOf("@") - 1);
+        let conn = storage.createConnect(comp);
+        let result = user.user.checkSubscribe(conn, decoded.email);
+        if (result) {
+            res.sendStatus(HttpStatus.OK);
+            return;
+        }
+        res.sendStatus(HttpStatus.NOT_FOUND);
+    })
+    .post(function (req, res) {
+        if (!req.cookies.user) {
+            res.status(HttpStatus.UNAUTHORIZED).json({error: "Необходима авторизация"});
+            return
+        }
+
+        let decoded = jwt.decode(req.cookies.user);
+
+        if (decoded.group !== "admin") {
+            res.status(HttpStatus.UNAUTHORIZED).json({error: "Необходима авторизация"});
+            return
+        }
+
+        let email = decoded.email;
+        let comp = email.substr(email.indexOf("@") + 1, email.lastIndexOf(".") - email.indexOf("@") - 1);
+
+        let conn = storage.createConnect(comp);
+        user.user.renewSubscribeForMonth(conn);
+        res.sendStatus(HttpStatus.OK);
+    });
+
 app.get('/api/admin/check', (req, res) => {
     if (!req.cookies.user) {
         res.status(HttpStatus.UNAUTHORIZED).json({error: "Необходима авторизация"});
