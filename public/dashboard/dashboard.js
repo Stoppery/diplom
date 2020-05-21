@@ -23,7 +23,7 @@ function createUser() {
             'Charset': 'utf-8'
         },
     }).then(response => {
-        if (response.status !== 200) {
+        if (response.status >= 300) {
             response.json().then(response => {
                 let error = document.getElementById("error");
                 error.innerText = response.error;

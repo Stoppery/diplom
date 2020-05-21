@@ -5,12 +5,17 @@ const path = require('path');
 const app = express();
 const db = require('./storage/database');
 const user = require('./storage/user');
+const admin = require('./storage/admin');
 const jwt = require('jsonwebtoken');
 const cookieParser = require('cookie-parser');
 const HttpStatus = require('http-status-codes');
 
 const publicURL = __dirname + "/public/";
 const secretWord = "kek";
+const pgHost = "localhost";
+const pgUser = "tsaanstu";
+const pgPassword = "Abc123456#";
+const pgPort = "5432#";
 
 class Storage {
     constructor(PGHOST, PGUSER, PGPASSWORD, PGPORT) {
@@ -18,7 +23,6 @@ class Storage {
         this.PGUSER = PGUSER;
         this.PGPASSWORD = PGPASSWORD;
         this.PGPORT = PGPORT;
-        this.state = {};
     }
 
     createConnect(database) {
@@ -26,7 +30,7 @@ class Storage {
     }
 }
 
-let storage = new Storage('localhost', 'postgres', 'Xtcyjr007', '5432');
+let storage = new Storage(pgHost, pgUser, pgPassword, pgPort);
 
 app.use(express.static(path.join(__dirname, '/public/')));
 app.use(express.json());
@@ -201,7 +205,29 @@ app.route('/api/user')
                 break;
         }
 
-        let conn = storage.createConnect(company);
+        let conn;
+        try {
+            conn = storage.createConnect(company);
+        } catch (e) {
+            if (userGroup === "admin") {
+                admin.admin.createDB(pgHost, pgUser, pgPassword, pgPort, company).then(() => {
+                    conn = storage.createConnect(company);
+                    user.user.createUser(conn, {
+                        name: req.body.name,
+                        surname: req.body.surname,
+                        phone: req.body.phone,
+                        email: req.body.email,
+                        password: req.body.password,
+                        status: req.body.status,
+                        group: userGroup,
+                    });
+                    res.sendStatus(HttpStatus.CREATED);
+                });
+            } else {
+                res.status(HttpStatus.BAD_REQUEST).json({error: "База данных не найдена"});
+            }
+            return;
+        }
 
         user.user.createUser(conn, {
             name: req.body.name,
@@ -212,7 +238,7 @@ app.route('/api/user')
             status: req.body.status,
             group: userGroup,
         });
-        res.redirect('/dashboard');
+        res.sendStatus(HttpStatus.CREATED);
     });
 
 app.route('/api/profile')
