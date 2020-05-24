@@ -3,14 +3,23 @@
 const express = require('express');
 const path = require('path');
 const app = express();
-const db = require('./storage/database');
-const user = require('./storage/user');
+const db = require('./Auth/storage/database');
+const user = require('./Auth/storage/user');
+const admin = require('./Auth/storage/admin');
 const jwt = require('jsonwebtoken');
 const cookieParser = require('cookie-parser');
 const HttpStatus = require('http-status-codes');
-
-const publicURL = __dirname + "/public/";
+const publicURL = __dirname + "/Auth/public/";
 const secretWord = "kek";
+
+const pgHost = "localhost";
+const pgUser = "nika";
+const pgPassword = "qwerty";
+const pgPort = "5432#";
+
+const work = require('./Work/app.js');
+const project = require('./Work/storage/project');
+
 
 class Storage {
     constructor(PGHOST, PGUSER, PGPASSWORD, PGPORT) {
@@ -18,7 +27,6 @@ class Storage {
         this.PGUSER = PGUSER;
         this.PGPASSWORD = PGPASSWORD;
         this.PGPORT = PGPORT;
-        this.state = {};
     }
 
     createConnect(database) {
@@ -26,12 +34,15 @@ class Storage {
     }
 }
 
-let storage = new Storage('localhost', 'tsaanstu', 'Abc123456#', '5432');
+//let storage = new Storage('localhost', 'tsaanstu', 'Abc123456#', '5432');
+//let storage = new Storage('localhost', 'nika', 'qwerty', '5432');
+let storage = new Storage(pgHost, pgUser, pgPassword, pgPort);
 
-app.use(express.static(path.join(__dirname, '/public/')));
+app.use(express.static(path.join(__dirname, '/Auth/public/')));
 app.use(express.json());
 app.use(cookieParser());
 app.set('etag', false);
+app.use(express.static(path.join(work.publicURL)));
 
 //  КЛИЕНТСКАЯ ЧАСТЬ
 
@@ -75,8 +86,28 @@ app.get('/dashboard', (req, res) => {
     }
 });
 
+app.get('/projects', (req, res) => {
+    res.sendFile(work.publicURL + '/projects/myprojects.html');
+});
+
+app.get('/company', (req,res) => {
+res.sendFile(work.publicURL + '/company/profile.html');
+});
+
 //  СЕРВЕРНАЯ ЧАСТЬ
 
+app.get('/api/admin/check', (req, res) => {
+    if (!req.cookies.user) {
+        res.status(HttpStatus.UNAUTHORIZED).json({error: "Необходима авторизация"});
+        return
+    }
+    let decoded = jwt.decode(req.cookies.user);
+    if (decoded.group === "admin") {
+        res.sendStatus(HttpStatus.OK);
+        return
+    }
+    res.sendStatus(HttpStatus.UNAUTHORIZED);
+});
 
 app.post('/api/login', async function (req, res) {
     if (!req.body.email || !req.body.password) {
@@ -133,6 +164,25 @@ app.route('/api/showUsers')
         } else {
             res.status(HttpStatus.OK).json({users: usersData.users});
         }
+    });
+
+app.route('/api/user/password')
+    .post((req, res) => {
+        if (!req.cookies.user) {
+            res.status(HttpStatus.UNAUTHORIZED).json({error: "Необходима авторизация"});
+            return
+        }
+
+        if (!req.body.password) {
+            res.status(HttpStatus.BAD_REQUEST).json({error: "Некорректные данные"});
+            return
+        }
+
+        let decoded = jwt.decode(req.cookies.user);
+        let conn = storage.createConnect(decoded.comp);
+
+        user.user.updateUserPassword(conn, decoded.email, req.body.password);
+        res.sendStatus(HttpStatus.OK)
     });
 
 app.route('/api/user')
@@ -200,9 +250,29 @@ app.route('/api/user')
                 company = req.body.email.substr(req.body.email.indexOf("@") + 1, req.body.email.lastIndexOf(".") - req.body.email.indexOf("@") - 1);
                 break;
         }
-
-        let conn = storage.createConnect(company);
-
+       let conn;
+       try {
+           conn = storage.createConnect(company);
+       } catch (e) {
+           if (userGroup === "admin") {
+               admin.admin.createDB(pgHost, pgUser, pgPassword, pgPort, company).then(() => {
+                   conn = storage.createConnect(company);
+                   user.user.createUser(conn, {
+                       name: req.body.name,
+                       surname: req.body.surname,
+                       phone: req.body.phone,
+                       email: req.body.email,
+                       password: req.body.password,
+                       status: req.body.status,
+                       group: userGroup,
+                   });
+                   res.sendStatus(HttpStatus.CREATED);
+               });
+           } else {
+               res.status(HttpStatus.BAD_REQUEST).json({error: "База данных не найдена"});
+           }
+           return;
+       }
         user.user.createUser(conn, {
             name: req.body.name,
             surname: req.body.surname,
@@ -212,7 +282,7 @@ app.route('/api/user')
             status: req.body.status,
             group: userGroup,
         });
-        res.redirect('/dashboard');
+        res.sendStatus(HttpStatus.CREATED);
     });
 
 app.route('/api/profile')
@@ -231,6 +301,91 @@ app.route('/api/profile')
             res.status(HttpStatus.OK).json(userData.user);
         }
     });
+
+    /*
+app.route('/api/myprojects')
+    .get((req, res) => {
+        if (!req.cookies.user) {
+            res.status(HttpStatus.UNAUTHORIZED).json({error: "Необходима авторизация"});
+            return
+        }
+        let decoded = jwt.decode(req.cookies.user);
+        let conn = storage.createConnect(decoded.comp);
+
+        let projectData = project.project.getProject(conn, decoded.email)
+        if (projectData.error) {
+            res.status(HttpStatus.NOT_FOUND).json({error: projectData.error});
+        } else {
+            res.status(HttpStatus.OK).json(projectData.project);
+        }
+    });*/
+
+app.route('/api/projects')
+    .get((req, res) => {
+        if (!req.cookies.user) {
+            res.status(HttpStatus.UNAUTHORIZED).json({error: "Необходима авторизация"});
+            return
+        }
+        let decoded = jwt.decode(req.cookies.user);
+        let conn = storage.createConnect(decoded.comp);
+        let projectsData = project.project.getProjects(conn, decoded.email);
+        if (projectsData.error) {
+            res.status(HttpStatus.INTERNAL_SERVER_ERROR).json({error: projectsData.error});
+        } else {
+            res.status(HttpStatus.OK).json({projects: projectsData.projects});
+        }
+    })
+    .post((req, res) => {
+        if (!req.cookies.user) {
+            res.status(HttpStatus.UNAUTHORIZED).json({error: "Необходима авторизация"});
+            return
+        }
+
+        let decoded = jwt.decode(req.cookies.user);
+        let company = decoded.comp;
+        let email = decoded.email;
+        let conn = storage.createConnect(company);
+     
+        let dateCreate = new Date().toUTCString();
+        project.project.createProject(conn, email, {
+            file: req.body.file,
+            datecreate: dateCreate,
+            datemodified: dateCreate,
+            depth: req.body.depth,
+        });
+        res.sendStatus(HttpStatus.CREATED);
+    })
+    .delete((req, res) => {
+        if (!req.cookies.user) {
+            res.status(HttpStatus.UNAUTHORIZED).json({error: "Необходима авторизация"});
+            return
+        }
+
+        let decoded = jwt.decode(req.cookies.user);
+        let file = req.query.file;
+        if (file === "") {
+            res.status(HttpStatus.BAD_REQUEST).json({error: "Неверные параметры"});
+            return
+        }
+        let conn = storage.createConnect(decoded.comp);
+
+        project.project.deleteProject(conn, file);
+        res.sendStatus(HttpStatus.OK);
+    });
+
+app.route('/api/company')
+    .get((req, res) => { if (!req.cookies.user) {
+        res.status(HttpStatus.UNAUTHORIZED).json({error: "Необходима авторизация"});
+        return
+    }
+    let decoded = jwt.decode(req.cookies.user);
+    let conn = storage.createConnect(decoded.comp);
+    let projectsData = project.project.getAllProjects(conn, decoded.email);
+    if (projectsData.error) {
+        res.status(HttpStatus.INTERNAL_SERVER_ERROR).json({error: projectsData.error});
+    } else {
+        res.status(HttpStatus.OK).json({projects: projectsData.projects});
+    }});
 
 let port = process.env.PORT || 3000;
 

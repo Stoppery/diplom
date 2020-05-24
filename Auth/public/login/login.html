@@ -1,0 +1,41 @@
+<html>
+<head>
+    <title>Login Here</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body class="container">
+<div class="page-header">
+    <h1>Prokatka Application</h1>
+</div>
+
+<nav class="navbar navbar-default">
+    <div class="container-fluid">
+        <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
+            <ul class="nav navbar-nav navbar-right">
+                
+            </ul>
+        </div>
+    </div>
+</nav>
+
+<div class="container row">
+    <div class="jumbotron col-sm-4 pull-center">
+        <form onsubmit="login(event)">
+            <div id="error"></div>
+            <div>
+                <label>Email:</label>
+                <input type="text" id="email" name="email" placeholder="Please enter your e-mail"/>
+            </div>
+            <div>
+                <label>Password:</label>
+                <input type="password" id="password" name="password" placeholder="Please enter your pass"/>
+            </div>
+            <div>
+                <input class="btn btn-primary" type="submit" value="Log In"/>
+            </div>
+        </form>
+    </div>
+</div>
+<script src="./login.js"></script>
+</body>
+</html>

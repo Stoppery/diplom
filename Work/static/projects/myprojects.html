@@ -1,0 +1,56 @@
+<html>
+    <head>
+        <title>Application</title>
+        <link rel="stylesheet" href="css/style.css">
+    </head>
+    <body class="container">
+        <div class="page-header">
+            <h1>Prokatka Application</h1>
+        </div>
+
+        <nav class="navbar navbar-default">
+            <div class="container-fluid">
+                <!-- Collect the nav links, forms, and other content for toggling -->
+                <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
+                    <ul class="nav navbar-nav navbar-left">
+                        <li><a href="/dashboard">Main page</a></li>
+                        <li><a href="/company">All projects</a></li>
+                    </ul>
+                        
+                    <ul class="nav navbar-nav navbar-right">
+                        <li><a href="/api/logout">Log Out</a></li>
+                    </ul>
+                </div><!-- /.navbar-collapse -->
+            </div><!-- /.container-fluid -->
+        </nav>
+        <div>
+            <input class="btn btn-primary" onclick="showForm()" value="Create new project"/>
+        </div>
+        <div class="form-popup" id="myForm">
+            <form action="#" class="form-container">
+              <label for="file"><b>Название проекта</b></label>
+              <input id="file" type="text" placeholder="Project 1" name="file" required>
+              <label for="depth"><b>Параметр</b></label>
+              <input id="depth" type="number" placeholder="1" name="depth" required>
+              <input class="btn btn-primary" onclick="createProject()" value="Create"/>
+              <button type="button" class="btn cancel" onclick="closeForm()">Закрыть</button>
+            </form>
+          </div>
+        <div class="container row">
+           <h1>Welcome to your projects</h1>
+            <div id="proj" class="jumbotron col-sm-4 pull-center">
+                <div id="error"></div>
+                <table id="projectTable">
+                    <tr>
+                        <td> </td>
+                        <td> </td>
+                        <td> </td>
+                        <td> </td>
+                        <td> </td>
+                    </tr>
+                </table>
+            </div>
+        </div>
+        <script src="myprojects.js"></script>
+    </body>
+</html>
