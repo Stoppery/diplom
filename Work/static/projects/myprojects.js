@@ -14,7 +14,7 @@ function deleteProject(file) {
 }
 
 
-function showversions(file){
+function showversions(file) {
     fetch(`http://localhost:3000/api/projects/version?file=${file}`, {
         method: 'GET',
         headers: {
@@ -23,21 +23,32 @@ function showversions(file){
         },
     }).then(response => {
         response.json().then(response => {
-            let table = document.getElementById("versionsTable");
+            if (response.versions.length === 0) {
+                return
+            }
 
             for (let i = 0; i < response.versions.length; i++) {
+                if (document.getElementById("ep" + response.versions[i].id)) {
+                    continue
+                }
+
+                let parentElement = document.getElementById(response.versions[i].root);
                 let tr = document.createElement("tr");
+                tr.setAttribute("id", "ep" + response.versions[i].id);
+
+                let tdEmpty = document.createElement("td");
                 let tdVersion = document.createElement("td");
                 let tdDate = document.createElement("td");
                 let tdAuthor = document.createElement("td");
 
                 let button = document.createElement("input");
                 button.type = "button";
-               // button.addEventListener("click", () => revertProject(response.[i].email));
+                button.addEventListener("click", () => document.location.href = `version?file=${response.versions[i].id}`);
                 button.value = "Редактировать";
+
                 let delbutton = document.createElement("input");
                 delbutton.type = "button";
-                delbutton.addEventListener("click", () => deleteVersion(response.versions[i].version))
+                delbutton.addEventListener("click", () => deleteVersion(response.versions[i].version));
                 delbutton.value = "Удалить";
 
                 tdVersion.innerText = response.versions[i].version;
@@ -46,21 +57,22 @@ function showversions(file){
                 tdDate.innerText = tempdatecreate;
                 tdAuthor.innerText = response.versions[i].author;
 
+                tr.appendChild(tdEmpty);
                 tr.appendChild(tdVersion);
                 tr.appendChild(tdDate);
                 tr.appendChild(tdAuthor);
                 tr.appendChild(button);
                 tr.appendChild(delbutton);
 
-                table.appendChild(tr);
+                parentElement.after(tr);
             }
         });
+
     })
 }
 
 
-
-async function showprojects(){
+async function showprojects() {
     fetch('http://localhost:3000/api/projects', {
         method: 'GET',
         headers: {
@@ -68,12 +80,15 @@ async function showprojects(){
             'Charset': 'utf-8',
         },
     }).then(response => {
-        
+
         response.json().then(response => {
             let table = document.getElementById("projectTable");
 
             for (let i = 0; i < response.projects.length; i++) {
                 let tr = document.createElement("tr");
+
+                tr.setAttribute("id", response.projects[i].id);
+
                 let tdFile = document.createElement("td");
                 let tdDate = document.createElement("td");
                 let tdDateM = document.createElement("td");
@@ -110,7 +125,7 @@ async function showprojects(){
     })
 }
 
-function showForm(){
+function showForm() {
     document.getElementById("myForm").style.display = "block";
 }
 
@@ -118,7 +133,7 @@ function closeForm() {
     document.getElementById("myForm").style.display = "none";
 }
 
-function createProject(){
+function createProject() {
     let nameInput = document.getElementById("file");
     let depthInput = document.getElementById("depth");
 
@@ -139,8 +154,8 @@ function createProject(){
             response.json().then(response => {
                 let error = document.getElementById("error");
                 error.innerText = response.error;
-              //  let message = document.getElementById("message");
-               // message.innerText = response.message;
+                //  let message = document.getElementById("message");
+                // message.innerText = response.message;
             });
         } else {
             nameInput.value = "";
@@ -148,7 +163,7 @@ function createProject(){
             let message = document.getElementById("message");
             message.innerText = response.message;
         }
-    })
+    });
     document.getElementById("projectTable").remove();
     let table = document.createElement("table");
     table.id = "projectTable";

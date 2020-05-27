@@ -13,9 +13,9 @@ const publicURL = __dirname + "/Auth/public/";
 const secretWord = "kek";
 
 const pgHost = "localhost";
-const pgUser = "nika";
-const pgPassword = "qwerty";
-const pgPort = "5432#";
+const pgUser = "tsaanstu";
+const pgPassword = "Abc123456#";
+const pgPort = "5432";
 
 const work = require('./Work/app');
 const project = require('./Work/storage/project');
@@ -93,10 +93,10 @@ app.get('/projects', (req, res) => {
 });
 
 app.get('/projects/version', (req, res) => {
-    res.sendFile(work.publicURL + '/projects/myprojects.html');
+    res.sendFile(work.publicURL + '/projects/version.html');
 });
 
-app.get('/company', (req,res) => {
+app.get('/company', (req, res) => {
     res.sendFile(work.publicURL + '/company/company.html');
 });
 
@@ -261,29 +261,29 @@ app.route('/api/user')
                 company = req.body.email.substr(req.body.email.indexOf("@") + 1, req.body.email.lastIndexOf(".") - req.body.email.indexOf("@") - 1);
                 break;
         }
-       let conn;
-       try {
-           conn = storage.createConnect(company);
-       } catch (e) {
-           if (userGroup === "admin") {
-               admin.admin.createDB(pgHost, pgUser, pgPassword, pgPort, company).then(() => {
-                   conn = storage.createConnect(company);
-                   user.user.createUser(conn, {
-                       name: req.body.name,
-                       surname: req.body.surname,
-                       phone: req.body.phone,
-                       email: req.body.email,
-                       password: req.body.password,
-                       status: req.body.status,
-                       group: userGroup,
-                   });
-                   res.sendStatus(HttpStatus.CREATED);
-               });
-           } else {
-               res.status(HttpStatus.BAD_REQUEST).json({error: "База данных не найдена"});
-           }
-           return;
-       }
+        let conn;
+        try {
+            conn = storage.createConnect(company);
+        } catch (e) {
+            if (userGroup === "admin") {
+                admin.admin.createDB(pgHost, pgUser, pgPassword, pgPort, company).then(() => {
+                    conn = storage.createConnect(company);
+                    user.user.createUser(conn, {
+                        name: req.body.name,
+                        surname: req.body.surname,
+                        phone: req.body.phone,
+                        email: req.body.email,
+                        password: req.body.password,
+                        status: req.body.status,
+                        group: userGroup,
+                    });
+                    res.sendStatus(HttpStatus.CREATED);
+                });
+            } else {
+                res.status(HttpStatus.BAD_REQUEST).json({error: "База данных не найдена"});
+            }
+            return;
+        }
         user.user.createUser(conn, {
             name: req.body.name,
             surname: req.body.surname,
@@ -325,9 +325,9 @@ app.route('/api/projects')
         let projectsData = project.project.getProjects(conn, decoded.email);
         if (projectsData.error) {
             res.status(HttpStatus.INTERNAL_SERVER_ERROR).json({error: projectsData.error});
-        } else {
-            res.status(HttpStatus.OK).json({projects: projectsData.projects});
+            return;
         }
+        res.status(HttpStatus.OK).json({projects: projectsData.projects});
     })
     .post((req, res) => {
         if (!req.cookies.user) {
@@ -339,7 +339,7 @@ app.route('/api/projects')
         let company = decoded.comp;
         let email = decoded.email;
         let conn = storage.createConnect(company);
-     
+
         let dateCreate = new Date().toUTCString();
         let projectData = project.project.createProject(conn, email, {
             file: req.body.file,
@@ -349,9 +349,9 @@ app.route('/api/projects')
         });
         if (projectData.error) {
             res.status(HttpStatus.INTERNAL_SERVER_ERROR).json({error: projectData.error});
-        } else {
-            res.status(HttpStatus.CREATED).json({message: projectData.message});
+            return;
         }
+        res.status(HttpStatus.CREATED).json({message: projectData.message});
 
     })
     .delete((req, res) => {
@@ -372,12 +372,13 @@ app.route('/api/projects')
         res.sendStatus(HttpStatus.OK);
     });
 
-app.route('/api/projects/version?')
+app.route('/api/projects/version')
     .get((req, res) => {
         if (!req.cookies.user) {
             res.status(HttpStatus.UNAUTHORIZED).json({error: "Необходима авторизация"});
             return
         }
+
         let decoded = jwt.decode(req.cookies.user);
         let file = req.query.file;
         if (file === "") {
@@ -386,37 +387,39 @@ app.route('/api/projects/version?')
             return
         }
         let conn = storage.createConnect(decoded.comp);
-        
+
         let versionsData = version.version.getVersions(conn, decoded.email, file);
+
         if (versionsData.error != null) {
             console.log("hello");
             let startData = version.version.startVersion(conn, decoded.email, file);
-            if(startData.error){
-                res.status(HttpStatus.BAD_REQUEST).json({error: startData.error});
-            }else{
-                res.status(HttpStatus.CREATED).json({versions: startData.versions});
-            }
-            res.status(HttpStatus.INTERNAL_SERVER_ERROR).json({error: versionsData.error});
 
+            if (startData.error) {
+                res.status(HttpStatus.BAD_REQUEST).json({error: startData.error});
+                return;
+            }
+            res.status(HttpStatus.CREATED).json({versions: startData.versions});
         } else {
             res.status(HttpStatus.OK).json({versions: versionsData.versions});
         }
-    })
+    });
 
 
 app.route('/api/company')
-    .get((req, res) => { if (!req.cookies.user) {
-        res.status(HttpStatus.UNAUTHORIZED).json({error: "Необходима авторизация"});
-        return
-    }
-    let decoded = jwt.decode(req.cookies.user);
-    let conn = storage.createConnect(decoded.comp);
-    let projectsData = project.project.getAllProjects(conn, decoded.email);
-    if (projectsData.error) {
-        res.status(HttpStatus.INTERNAL_SERVER_ERROR).json({error: projectsData.error});
-    } else {
+    .get((req, res) => {
+        if (!req.cookies.user) {
+            res.status(HttpStatus.UNAUTHORIZED).json({error: "Необходима авторизация"});
+            return
+        }
+        let decoded = jwt.decode(req.cookies.user);
+        let conn = storage.createConnect(decoded.comp);
+        let projectsData = project.project.getAllProjects(conn, decoded.email);
+        if (projectsData.error) {
+            res.status(HttpStatus.INTERNAL_SERVER_ERROR).json({error: projectsData.error});
+            return;
+        }
         res.status(HttpStatus.OK).json({projects: projectsData.projects});
-    }});
+    });
 
 let port = process.env.PORT || 3000;
 

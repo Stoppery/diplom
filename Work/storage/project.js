@@ -21,7 +21,7 @@ module.exports.project = {
         };
     },
     getProjects: function (conn, email) {
-        let rows = conn.querySync(`SELECT file, datecreation, datelastmodified, users.name, depth FROM project JOIN users ON author=users.id WHERE email = '${email}'`);
+        let rows = conn.querySync(`SELECT p.id, file, datecreation, datelastmodified, users.name, depth FROM project as p JOIN users ON author=users.id WHERE email = '${email}'`);
         let result = {
             projects: [],
             error: null,
@@ -30,6 +30,7 @@ module.exports.project = {
         if (rows.length > 0) {
             for (let i = 0; i < rows.length; i++) {
                 result.projects.push({
+                    id: rows[i].id,
                     file: rows[i].file,
                     datecreate: rows[i].datecreation,
                     datemodified: rows[i].datelastmodified,
@@ -45,7 +46,7 @@ module.exports.project = {
     },
 
     getAllProjects: function (conn, email) {
-        let rows = conn.querySync(`SELECT file, datecreation, datelastmodified, users.name, depth FROM project JOIN users ON author=users.id WHERE email != '${email}' ORDER BY datecreation`);
+        let rows = conn.querySync(`SELECT p.id, file, datecreation, datelastmodified, users.name, depth FROM project as p JOIN users ON author=users.id WHERE email != '${email}' ORDER BY datecreation`);
         let result = {
             projects: [],
             error: null,
@@ -54,6 +55,7 @@ module.exports.project = {
         if (rows.length > 0) {
             for (let i = 0; i < rows.length; i++) {
                 result.projects.push({
+                    id: rows[i].id,
                     file: rows[i].file,
                     datecreate: rows[i].datecreation,
                     datemodified: rows[i].datelastmodified,
