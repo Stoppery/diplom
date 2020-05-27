@@ -49,7 +49,7 @@ async function showallprojects(){
     })
 }
 
-
+/*
 function showversions(ver) {
     fetch(`http://localhost:3000/api/company/version?ver=${ver}`, {
         method: 'GET',
@@ -108,7 +108,7 @@ function showversions(ver) {
         });
 
     })
-}
+}*/
 
 
 showallprojects();

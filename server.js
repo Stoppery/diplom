@@ -471,7 +471,7 @@ app.route('/api/versions/create')
 
 
 app.route('/api/company')
-    .get((req, res) => {
+  /*  .get((req, res) => {
         if (!req.cookies.user) {
             res.status(HttpStatus.UNAUTHORIZED).json({error: "Необходима авторизация"});
             return
@@ -492,8 +492,8 @@ app.route('/api/company')
         } else {
             res.status(HttpStatus.OK).json({versions: versionsData.versions});
         }
-    })
-    /*.get((req, res) => {
+    })*/
+    .get((req, res) => {
         if (!req.cookies.user) {
             res.status(HttpStatus.UNAUTHORIZED).json({error: "Необходима авторизация"});
             return
@@ -506,7 +506,7 @@ app.route('/api/company')
             return;
         }
         res.status(HttpStatus.OK).json({projects: projectsData.projects});
-    });*/
+    });
 
 
 
