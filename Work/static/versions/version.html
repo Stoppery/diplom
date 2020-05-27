@@ -14,7 +14,7 @@
                 <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
                     <ul class="nav navbar-nav navbar-left">
                         <li><a href="/dashboard">Main page</a></li>
-                        <li><a href="/company">All projects</a></li>
+                        <li><a href="/projects">My projects</a></li>
                     </ul>
                         
                     <ul class="nav navbar-nav navbar-right">
@@ -23,30 +23,11 @@
                 </div><!-- /.navbar-collapse -->
             </div><!-- /.container-fluid -->
         </nav>
-        <div>
-            <input class="btn btn-primary" onclick="showForm()" value="Create new project"/>
-        </div>
-        <div class="form-popup" id="myForm">
-            <form action="#" class="form-container">
-              <label for="file"><b>Название версии</b></label>
-              <input id="file" type="text" placeholder="Project 1" name="file" required>
-              <label for="depth"><b>Параметр</b></label>
-              <input id="depth" type="number" placeholder="1" name="depth" required>
-              <input class="btn btn-primary" onclick="createProject()" value="Create"/>
-              <button type="button" class="btn cancel" onclick="closeForm()">Закрыть</button>
-            </form>
-          </div>
         <div class="container row">
-           <h1>Versions of project</h1>
-            <div id="proj" class="jumbotron col-sm-4 pull-center">
+           <h1 id="ver">Version </h1>
+            <div id="proj" class="jumbotron col-sm-8 pull-center">
                 <div id="error"></div>
-                <div id="message"></div>
                 <table id="versionTable">
-                    <tr>
-                        <td> </td>
-                        <td> </td>
-                        <td> </td>
-                    </tr>
                 </table>
             </div>
         </div>

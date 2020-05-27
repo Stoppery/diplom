@@ -1,8 +1,9 @@
 module.exports.versionSchema = `
     create table version(
         id serial not null primary key,
-        version integer not null,
+        version varchar(255) not null,
         datecreation timestamp with time zone,
+        datemodified timestamp with time zone,
         data text,
         proot integer,
         authorv integer,

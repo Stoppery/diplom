@@ -1,9 +1,3 @@
-/*!
- * Bootstrap v3.3.7 (http://getbootstrap.com)
- * Copyright 2011-2016 Twitter, Inc.
- * Licensed under MIT (https://github.com/twbs/bootstrap/blob/master/LICENSE)
- */
-/*! normalize.css v3.0.3 | MIT License | github.com/necolas/normalize.css */
 html {
     font-family: sans-serif;
     -webkit-text-size-adjust: 100%;
@@ -13,6 +7,16 @@ html {
 body {
     margin:0
 }
+
+.form-popup {
+    display: none;
+    position: fixed;
+    top: 26%;
+    right: 25%;
+    border: 2px solid #337ab7;
+    z-index: 9;
+    
+  }
 
 article, aside, details, figcaption, figure, footer, header, hgroup, main, menu, nav, section, summary {
     display:block
@@ -110,8 +114,7 @@ code, kbd, pre, samp {
 }
 
 button, input, optgroup, select, textarea {
-    margin-top: 5;
-    width: 250;
+    margin: 0;
     font: inherit;
     color:inherit
 }
@@ -185,13 +188,14 @@ optgroup {
 
 table {
     border-spacing: 0;
-    border-collapse:collapse
+    border-collapse:collapse;
+    width: 100%;
 }
 
 td, th {
-    padding:0
+    padding:10;
+    width: 80%;
 }
-/*! Source: https://github.com/h5bp/html5-boilerplate/blob/master/src/css/main.css */
 
 @media print {
     *, :after, :before {
@@ -214,10 +218,7 @@ td, th {
         content: " (" attr(title) ")"
     }
 
-    a[href^="javascript:"]: after, a[href^="#"]:after {
-        content: ""
-    }
-
+ 
     blockquote, pre {
         border: 1px solid #999;
         page-break-inside:avoid
@@ -2774,17 +2775,6 @@ th {
     background-color:#f5f5f5
 }
 
-table col[class * =col-] {
-    position: static;
-    display: table-column;
-    float:none
-}
-
-table td[class * =col-], table th[class * =col-] {
-    position: static;
-    display: table-cell;
-    float:none
-}
 
 .table > tbody > tr.active > td, .table > tbody > tr.active > th, .table > tbody > tr > td.active, .table > tbody > tr > th.active, .table > tfoot > tr.active > td, .table > tfoot > tr.active > th, .table > tfoot > tr > td.active, .table > tfoot > tr > th.active, .table > thead > tr.active > td, .table > thead > tr.active > th, .table > thead > tr > td.active, .table > thead > tr > th.active {
     background-color:#f5f5f5
@@ -3380,9 +3370,10 @@ select[multiple].input-lg, textarea.input-lg {
 
 .btn {
     display: inline-block;
-    margin-left: 220px;
-    padding: 6px 12px;
-    margin-top: -50px;
+    margin-left: 0 px;
+    padding-left: 0%;
+    padding-right: 0%;
+    margin-top: 10px;
     margin-bottom: 0;
     font-size: 14px;
     font-weight: 400;
@@ -4139,11 +4130,6 @@ tbody.collapse.in {
     border-collapse:separate
 }
 
-.input-group[class * =col-] {
-    float: none;
-    padding-right: 0;
-    padding-left:0
-}
 
 .input-group .form-control {
     position: relative;
@@ -6861,18 +6847,6 @@ button.close {
     list-style:none
 }
 
-.carousel-indicators li {
-    display: inline-block;
-    width: 10px;
-    height: 10px;
-    margin: 1px;
-    text-indent: -999px;
-    cursor: pointer;
-    background-color: #000\9;
-    background-color: rgba(0, 0, 0, 0);
-    border: 1px solid #fff;
-    border-radius:10px
-}
 
 .carousel-indicators .active {
     width: 12px;
@@ -7213,4 +7187,3 @@ button.close {
         display: none !important
     }
 }
-/*# sourceMappingURL=bootstrap.min.css.map */

@@ -74,7 +74,7 @@ module.exports.project = {
         let row = conn.querySync(`SELECT id FROM users WHERE email = '${email}'`);
         if(row.length > 0){
             let idUs = row[0].id;
-            let res = conn.querySync(`SELECT file FROM project`);
+            let res = conn.querySync(`SELECT file FROM project WHERE author = '${idUs}'`);
             let samename = false;
             if(res.length > 0){
                 for (let i = 0; i < res.length; i++) {
@@ -106,6 +106,13 @@ module.exports.project = {
     },
 
     deleteProject: function (conn, file) {
+        let row = conn.querySync(`SELECT version.id FROM version JOIN project ON proot = project.id WHERE file = '${file}' `);
+        if(row.length > 0){
+            for (let i = 0; i < row.length; i++) {
+                resId = row[i].id;
+                conn.querySync(`DELETE FROM version WHERE id = '${resId}'`);
+            }
+        }
         conn.querySync(`DELETE FROM project WHERE file = '${file}'`);
     },
    

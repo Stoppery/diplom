@@ -1,7 +1,7 @@
 module.exports.projectSchema = `
     create table project(
         id serial not null primary key,
-        file varchar(255) not null unique,
+        file varchar(255) not null,
         datecreation timestamp with time zone,
         datelastmodified timestamp with time zone,
         depth integer,

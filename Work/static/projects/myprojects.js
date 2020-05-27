@@ -1,74 +1,18 @@
 function deleteProject(file) {
+    let isConfirmed = confirm('Удалить проект?');
+    if(isConfirmed){
     fetch(`http://localhost:3000/api/projects?file=${file}`, {
         method: 'DELETE',
         headers: {
             'Content-Type': 'application/json',
             'Charset': 'utf-8'
         },
-    });
+    });}
     document.getElementById("projectTable").remove();
     let table = document.createElement("table");
     table.id = "projectTable";
     document.getElementById("proj").appendChild(table);
     showprojects();
-}
-
-
-function showversions(file) {
-    fetch(`http://localhost:3000/api/projects/version?file=${file}`, {
-        method: 'GET',
-        headers: {
-            'Content-Type': 'application/json',
-            'Charset': 'utf-8',
-        },
-    }).then(response => {
-        response.json().then(response => {
-            if (response.versions.length === 0) {
-                return
-            }
-
-            for (let i = 0; i < response.versions.length; i++) {
-                if (document.getElementById("ep" + response.versions[i].id)) {
-                    continue
-                }
-
-                let parentElement = document.getElementById(response.versions[i].root);
-                let tr = document.createElement("tr");
-                tr.setAttribute("id", "ep" + response.versions[i].id);
-
-                let tdEmpty = document.createElement("td");
-                let tdVersion = document.createElement("td");
-                let tdDate = document.createElement("td");
-                let tdAuthor = document.createElement("td");
-
-                let button = document.createElement("input");
-                button.type = "button";
-                button.addEventListener("click", () => document.location.href = `version?file=${response.versions[i].id}`);
-                button.value = "Редактировать";
-
-                let delbutton = document.createElement("input");
-                delbutton.type = "button";
-                delbutton.addEventListener("click", () => deleteVersion(response.versions[i].version));
-                delbutton.value = "Удалить";
-
-                tdVersion.innerText = response.versions[i].version;
-                let tempdatecreate = new Date(response.versions[i].datecreate).toLocaleString("ru");
-                console.log(tempdatecreate);
-                tdDate.innerText = tempdatecreate;
-                tdAuthor.innerText = response.versions[i].author;
-
-                tr.appendChild(tdEmpty);
-                tr.appendChild(tdVersion);
-                tr.appendChild(tdDate);
-                tr.appendChild(tdAuthor);
-                tr.appendChild(button);
-                tr.appendChild(delbutton);
-
-                parentElement.after(tr);
-            }
-        });
-
-    })
 }
 
 
@@ -119,6 +63,8 @@ async function showprojects() {
                 tr.appendChild(tdDepth);
                 tr.appendChild(button);
                 tr.appendChild(delbutton);
+
+                
                 table.appendChild(tr);
             }
         });
@@ -154,14 +100,10 @@ function createProject() {
             response.json().then(response => {
                 let error = document.getElementById("error");
                 error.innerText = response.error;
-                //  let message = document.getElementById("message");
-                // message.innerText = response.message;
             });
         } else {
             nameInput.value = "";
             depthInput.value = "";
-            let message = document.getElementById("message");
-            message.innerText = response.message;
         }
     });
     document.getElementById("projectTable").remove();
@@ -171,5 +113,100 @@ function createProject() {
     showprojects();
 }
 
+
+
+function showversions(file) {
+    fetch(`http://localhost:3000/api/projects/version?file=${file}`, {
+        method: 'GET',
+        headers: {
+            'Content-Type': 'application/json',
+            'Charset': 'utf-8',
+        },
+    }).then(response => {
+        response.json().then(response => {
+            if (response.versions.length === 0) {
+                return
+            }
+
+            for (let i = 0; i < response.versions.length; i++) {
+                if (document.getElementById("ep" + response.versions[i].id)) {
+                    continue
+                }
+
+                let parentElement = document.getElementById(response.versions[i].root);
+                let tr = document.createElement("tr");
+                tr.setAttribute("id", "ep" + response.versions[i].id);
+
+                let tdEmpty = document.createElement("td");
+                let tdVersion = document.createElement("td");
+                let tdDate = document.createElement("td");
+                let tdDateM = document.createElement("td");
+                let tdAuthor = document.createElement("td");
+
+                let button = document.createElement("input");
+                button.type = "button";
+                button.addEventListener("click", () => document.location.href = `../versions?ver=${response.versions[i].id}`);
+                button.value = "Редактировать";
+
+                let tdButton = document.createElement("td");
+                tdButton.appendChild(button);
+
+                let delbutton = document.createElement("input");
+                delbutton.type = "button";
+                delbutton.addEventListener("click", () => deleteVersion(response.versions[i].id));
+                delbutton.value = "Удалить";
+
+                let tdDelbutton = document.createElement("td");
+                tdDelbutton.appendChild(delbutton);
+
+                tdVersion.innerText = response.versions[i].version;
+                let tempdatecreate = new Date(response.versions[i].datecreate).toLocaleString("ru");
+                tdDate.innerText = tempdatecreate;
+                let tempdatemodified = new Date(response.versions[i].datemodified).toLocaleString("ru");
+                tdDateM.innerText = tempdatemodified;
+                tdAuthor.innerText = response.versions[i].author;
+
+                tr.appendChild(tdEmpty);
+                tr.appendChild(tdVersion);
+                tr.appendChild(tdDate);
+                tr.appendChild(tdDateM);
+                tr.appendChild(tdAuthor);
+                tr.appendChild(tdButton);
+                tr.appendChild(tdDelbutton);
+
+                let tdCreate = document.createElement("td");
+                let createbutton = document.createElement("input");
+                createbutton.setAttribute("id","but" + response.versions[i].id);
+                createbutton.type = "button";
+                createbutton.value = "Создать новую версию";
+                createbutton.addEventListener("click", () => document.location.href = `../versions/create?file=${response.versions[i].root}`);
+                tdCreate.appendChild(createbutton);
+                tr.appendChild(tdCreate);
+                parentElement.after(tr);
+                    
+            }
+        });
+
+    })
+}
+
+
+function deleteVersion(ver){
+    let isConfirmed = confirm('Удалить версию?');
+    if(isConfirmed){
+    fetch(`http://localhost:3000/api/projects/version?ver=${ver}`, {
+        method: 'DELETE',
+        headers: {
+            'Content-Type': 'application/json',
+            'Charset': 'utf-8'
+        },
+    });
+    }
+    document.getElementById("projectTable").remove();
+    let table = document.createElement("table");
+    table.id = "projectTable";
+    document.getElementById("proj").appendChild(table);
+    showprojects();
+}
 
 showprojects();

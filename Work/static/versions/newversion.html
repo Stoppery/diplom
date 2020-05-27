@@ -1,7 +1,7 @@
 <html>
     <head>
         <title>Application</title>
-        <link rel="stylesheet" href="../projects/css/style.css">
+        <link rel="stylesheet" href="css/style.css">
     </head>
     <body class="container">
         <div class="page-header">
@@ -16,6 +16,7 @@
                         <li><a href="/dashboard">Main page</a></li>
                         <li><a href="/projects">My projects</a></li>
                     </ul>
+                        
                     <ul class="nav navbar-nav navbar-right">
                         <li><a href="/api/logout">Log Out</a></li>
                     </ul>
@@ -23,13 +24,17 @@
             </div><!-- /.container-fluid -->
         </nav>
         <div class="container row">
-           <h1>Welcome to projects of company</h1>
-            <div id="proj" class="jumbotron col-sm-8 pull-center">
-                <div id="error"></div>
-                <table id="projectTable">
-                </table>
+           <h1>Create of version</h1>
+           <div class="jumbotron col-sm-4 pull-center">
+            <div id="error"></div>
+            <div>
+                <label>Name of version:</label>
+                <input id="name" type="text" name="name"/>
+            </div>
+            <div>
+                <input class="btn btn-primary" onclick="createVersion()" value="Создать"/>
             </div>
         </div>
-        <script src="company.js"></script>
+        <script src="createversion.js"></script>
     </body>
 </html>
