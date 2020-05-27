@@ -1,5 +1,4 @@
 function deleteProject(file) {
-    console.log(`name = ${file}`);
     fetch(`http://localhost:3000/api/projects?file=${file}`, {
         method: 'DELETE',
         headers: {
@@ -13,6 +12,52 @@ function deleteProject(file) {
     document.getElementById("proj").appendChild(table);
     showprojects();
 }
+
+
+function showversions(file){
+    fetch(`http://localhost:3000/api/projects/version?file=${file}`, {
+        method: 'GET',
+        headers: {
+            'Content-Type': 'application/json',
+            'Charset': 'utf-8',
+        },
+    }).then(response => {
+        response.json().then(response => {
+            let table = document.getElementById("versionsTable");
+
+            for (let i = 0; i < response.versions.length; i++) {
+                let tr = document.createElement("tr");
+                let tdVersion = document.createElement("td");
+                let tdDate = document.createElement("td");
+                let tdAuthor = document.createElement("td");
+
+                let button = document.createElement("input");
+                button.type = "button";
+               // button.addEventListener("click", () => revertProject(response.[i].email));
+                button.value = "Редактировать";
+                let delbutton = document.createElement("input");
+                delbutton.type = "button";
+                delbutton.addEventListener("click", () => deleteVersion(response.versions[i].version))
+                delbutton.value = "Удалить";
+
+                tdVersion.innerText = response.versions[i].version;
+                let tempdatecreate = new Date(response.versions[i].datecreate).toLocaleString("ru");
+                console.log(tempdatecreate);
+                tdDate.innerText = tempdatecreate;
+                tdAuthor.innerText = response.versions[i].author;
+
+                tr.appendChild(tdVersion);
+                tr.appendChild(tdDate);
+                tr.appendChild(tdAuthor);
+                tr.appendChild(button);
+                tr.appendChild(delbutton);
+
+                table.appendChild(tr);
+            }
+        });
+    })
+}
+
 
 
 async function showprojects(){
@@ -37,7 +82,7 @@ async function showprojects(){
 
                 let button = document.createElement("input");
                 button.type = "button";
-                //button.addEventListener("click", () => deleteUser(response.users[i].email));
+                button.addEventListener("click", () => showversions(response.projects[i].file));
                 button.value = "Редактировать";
                 let delbutton = document.createElement("input");
                 delbutton.type = "button";
@@ -45,10 +90,8 @@ async function showprojects(){
                 delbutton.value = "Удалить";
 
                 tdFile.innerText = response.projects[i].file;
-                let tempdatecreate = new Date(response.projects[i].datecreate).toDateString();
-                let tempdatemodified = new Date(response.projects[i].datemodified).toDateString();
-                console.log(tempdatecreate);
-                //tdDate.innerText = response.projects[i].datecreate;
+                let tempdatecreate = new Date(response.projects[i].datecreate).toLocaleString("ru");
+                let tempdatemodified = new Date(response.projects[i].datemodified).toLocaleString("ru");
                 tdDate.innerText = tempdatecreate;
                 tdDateM.innerText = tempdatemodified;
                 tdAuthor.innerText = response.projects[i].author;
@@ -56,27 +99,14 @@ async function showprojects(){
 
                 tr.appendChild(tdFile);
                 tr.appendChild(tdDate);
-                tr.appendChild(tdDateM)
+                tr.appendChild(tdDateM);
                 tr.appendChild(tdAuthor);
                 tr.appendChild(tdDepth);
                 tr.appendChild(button);
                 tr.appendChild(delbutton);
-
                 table.appendChild(tr);
             }
         });
-        /*if (response.status !== 200) {
-            response.json().then(response => {
-                let error = document.getElementById("error");
-                error.innerText = response.error;
-            });
-        } else {
-            response.json().then(response => {
-                namefileIinput.value = response.name;
-                datecreateInput.value = response.datecreate;
-                authorInput.value = response.author;
-            });
-        }*/
     })
 }
 
@@ -109,10 +139,14 @@ function createProject(){
             response.json().then(response => {
                 let error = document.getElementById("error");
                 error.innerText = response.error;
+              //  let message = document.getElementById("message");
+               // message.innerText = response.message;
             });
         } else {
             nameInput.value = "";
             depthInput.value = "";
+            let message = document.getElementById("message");
+            message.innerText = response.message;
         }
     })
     document.getElementById("projectTable").remove();

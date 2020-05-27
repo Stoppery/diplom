@@ -23,8 +23,8 @@ async function showallprojects(){
                 //button.addEventListener("click", () => deleteUser(response.users[i].email));
                 button.value = "Клонировать";
                 
-                let tempdatecreate = new Date(response.projects[i].datecreate).toDateString();
-                let tempdatemodified = new Date(response.projects[i].datemodified).toDateString();
+                let tempdatecreate = new Date(response.projects[i].datecreate).toLocaleString("ru");
+                let tempdatemodified = new Date(response.projects[i].datemodified).toLocaleString("ru");
                 tdFile.innerText = response.projects[i].file;
                 tdDate.innerText = tempdatecreate;
                 tdDateM.innerText = tempdatemodified;
@@ -41,18 +41,6 @@ async function showallprojects(){
                 table.appendChild(tr);
             }
         });
-        /*if (response.status !== 200) {
-            response.json().then(response => {
-                let error = document.getElementById("error");
-                error.innerText = response.error;
-            });
-        } else {
-            response.json().then(response => {
-                namefileIinput.value = response.name;
-                datecreateInput.value = response.datecreate;
-                authorInput.value = response.author;
-            });
-        }*/
     })
 }
 

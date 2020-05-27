@@ -17,8 +17,9 @@ const pgUser = "nika";
 const pgPassword = "qwerty";
 const pgPort = "5432#";
 
-const work = require('./Work/app.js');
+const work = require('./Work/app');
 const project = require('./Work/storage/project');
+const version = require('./Work/storage/version');
 
 
 class Storage {
@@ -43,6 +44,7 @@ app.use(express.json());
 app.use(cookieParser());
 app.set('etag', false);
 app.use(express.static(path.join(work.publicURL)));
+app.use(express.static(path.join(work.publicURL, '/projects/')));
 
 //  КЛИЕНТСКАЯ ЧАСТЬ
 
@@ -90,8 +92,17 @@ app.get('/projects', (req, res) => {
     res.sendFile(work.publicURL + '/projects/myprojects.html');
 });
 
+app.get('/projects/version', (req, res) => {
+    res.sendFile(work.publicURL + '/projects/myprojects.html');
+});
+
 app.get('/company', (req,res) => {
-res.sendFile(work.publicURL + '/company/profile.html');
+    res.sendFile(work.publicURL + '/company/company.html');
+});
+
+
+app.get('/version', (req, res) => {
+    res.sendFile(work.publicURL + '/projects/version.html');
 });
 
 //  СЕРВЕРНАЯ ЧАСТЬ
@@ -302,23 +313,6 @@ app.route('/api/profile')
         }
     });
 
-    /*
-app.route('/api/myprojects')
-    .get((req, res) => {
-        if (!req.cookies.user) {
-            res.status(HttpStatus.UNAUTHORIZED).json({error: "Необходима авторизация"});
-            return
-        }
-        let decoded = jwt.decode(req.cookies.user);
-        let conn = storage.createConnect(decoded.comp);
-
-        let projectData = project.project.getProject(conn, decoded.email)
-        if (projectData.error) {
-            res.status(HttpStatus.NOT_FOUND).json({error: projectData.error});
-        } else {
-            res.status(HttpStatus.OK).json(projectData.project);
-        }
-    });*/
 
 app.route('/api/projects')
     .get((req, res) => {
@@ -347,13 +341,18 @@ app.route('/api/projects')
         let conn = storage.createConnect(company);
      
         let dateCreate = new Date().toUTCString();
-        project.project.createProject(conn, email, {
+        let projectData = project.project.createProject(conn, email, {
             file: req.body.file,
             datecreate: dateCreate,
             datemodified: dateCreate,
             depth: req.body.depth,
         });
-        res.sendStatus(HttpStatus.CREATED);
+        if (projectData.error) {
+            res.status(HttpStatus.INTERNAL_SERVER_ERROR).json({error: projectData.error});
+        } else {
+            res.status(HttpStatus.CREATED).json({message: projectData.message});
+        }
+
     })
     .delete((req, res) => {
         if (!req.cookies.user) {
@@ -372,6 +371,38 @@ app.route('/api/projects')
         project.project.deleteProject(conn, file);
         res.sendStatus(HttpStatus.OK);
     });
+
+app.route('/api/projects/version?')
+    .get((req, res) => {
+        if (!req.cookies.user) {
+            res.status(HttpStatus.UNAUTHORIZED).json({error: "Необходима авторизация"});
+            return
+        }
+        let decoded = jwt.decode(req.cookies.user);
+        let file = req.query.file;
+        if (file === "") {
+            console.log("Bad");
+            res.status(HttpStatus.BAD_REQUEST).json({error: "Неверные параметры"});
+            return
+        }
+        let conn = storage.createConnect(decoded.comp);
+        
+        let versionsData = version.version.getVersions(conn, decoded.email, file);
+        if (versionsData.error != null) {
+            console.log("hello");
+            let startData = version.version.startVersion(conn, decoded.email, file);
+            if(startData.error){
+                res.status(HttpStatus.BAD_REQUEST).json({error: startData.error});
+            }else{
+                res.status(HttpStatus.CREATED).json({versions: startData.versions});
+            }
+            res.status(HttpStatus.INTERNAL_SERVER_ERROR).json({error: versionsData.error});
+
+        } else {
+            res.status(HttpStatus.OK).json({versions: versionsData.versions});
+        }
+    })
+
 
 app.route('/api/company')
     .get((req, res) => { if (!req.cookies.user) {

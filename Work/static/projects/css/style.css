@@ -11,9 +11,9 @@ body {
 .form-popup {
     display: none;
     position: fixed;
-    bottom: 0;
-    right: 15px;
-    border: 3px solid #f1f1f1;
+    top: 26%;
+    right: 25%;
+    border: 2px solid #337ab7;
     z-index: 9;
     
   }
@@ -188,12 +188,13 @@ optgroup {
 
 table {
     border-spacing: 0;
-    border-collapse:collapse
+    border-collapse:collapse;
+    width: 100%;
 }
 
 td, th {
     padding:10;
-    width: 20%;
+    width: 80%;
 }
 
 @media print {

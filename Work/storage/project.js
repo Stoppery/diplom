@@ -1,6 +1,3 @@
-const Client = require('pg-native');
-const bcrypt = require('bcrypt');
-
 module.exports.project = {
     getProject: function(conn, email){
         let rows = conn.querySync(`SELECT project.file, datecreation, author FROM project JOIN users ON author=users.id WHERE email = '${email}'`);
@@ -75,10 +72,33 @@ module.exports.project = {
         let row = conn.querySync(`SELECT id FROM users WHERE email = '${email}'`);
         if(row.length > 0){
             let idUs = row[0].id;
-            conn.querySync(`INSERT into project(file, datecreation, datelastmodified, depth, author)` + 
-        `VALUES('${project.file}','${project.datecreate}','${project.datemodified}',${project.depth}, ${idUs});`);
+            let res = conn.querySync(`SELECT file FROM project`);
+            let samename = false;
+            if(res.length > 0){
+                for (let i = 0; i < res.length; i++) {
+                    if(res[i].file === project.file){
+                        samename = true;
+                    }
+                }
+            }
+            if(samename) {
+               return {
+                   message: null,
+                   error: "Проект с данным именем уже существует. Пожалуйста, выберете другое имя"
+                }
+            } else {
+                conn.querySync(`INSERT into project(file, datecreation, datelastmodified, depth, author)` + 
+                `VALUES('${project.file}','${project.datecreate}','${project.datemodified}',${project.depth}, ${idUs});`);
+                return {
+                    message: "Проект успешно создан",
+                    error: null
+                }
+            }
         } else { 
-            console.log("Can`t found user");
+            return {
+                message: null,
+                error: "Пользователь не найден"
+             }
         }
         
     },

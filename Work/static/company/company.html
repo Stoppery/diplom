@@ -1,7 +1,7 @@
 <html>
     <head>
         <title>Application</title>
-        <link rel="stylesheet" href="css/style.css">
+        <link rel="stylesheet" href="../projects/css/style.css">
     </head>
     <body class="container">
         <div class="page-header">
@@ -14,9 +14,7 @@
                 <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
                     <ul class="nav navbar-nav navbar-left">
                         <li><a href="/dashboard">Main page</a></li>
-                    </ul>
-                    <ul class="nav navbar-nav navbar-left">
-                        <li><a href="/dashboard">Create project</a></li>
+                        <li><a href="/projects">My projects</a></li>
                     </ul>
                     <ul class="nav navbar-nav navbar-right">
                         <li><a href="/api/logout">Log Out</a></li>
@@ -24,25 +22,21 @@
                 </div><!-- /.navbar-collapse -->
             </div><!-- /.container-fluid -->
         </nav>
-
         <div class="container row">
-           <h1>Welcome to your projects</h1>
-            <div class="jumbotron col-sm-4 pull-center">
+           <h1>Welcome to projects of company</h1>
+            <div id="proj" class="jumbotron col-sm-4 pull-center">
                 <div id="error"></div>
-                <div>
-                    <label>FileName:</label>
-                    <input id="name" type="text" disabled="disabled" name="name"/>
-                </div>
-                <div>
-                    <label>Date creation:</label>
-                    <input id="datecreate" type="text" disabled="disabled" name="datecreate"/>
-                </div>
-                <div>
-                    <label>Author:</label>
-                    <input id="author" type="number" disabled="disabled" name="author"/>
-                </div>
+                <table id="projectTable">
+                    <tr>
+                        <td> </td>
+                        <td> </td>
+                        <td> </td>
+                        <td> </td>
+                        <td> </td>
+                    </tr>
+                </table>
             </div>
         </div>
-        <script src="myprojects.js"></script>
+        <script src="company.js"></script>
     </body>
 </html>
