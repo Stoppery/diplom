@@ -43,11 +43,13 @@ async function showallprojects(){
                 button.type = "button";
                 //button.addEventListener("click", () => deleteUser(response.users[i].email));
                 button.value = "Клонировать";
+                button.setAttribute("class", "button-table");
                 let watchbutton = document.createElement("input");
                 let tdWBut = document.createElement("td");
                 watchbutton.type = "button";
                 watchbutton.value = "Версии";
                 watchbutton.addEventListener("click",  () => showversions(response.projects[i].file));
+                watchbutton.setAttribute("class", "button-table");
                 
                 let tempdatecreate = new Date(response.projects[i].datecreate).toLocaleString("ru");
                 let tempdatemodified = new Date(response.projects[i].datemodified).toLocaleString("ru");
@@ -110,12 +112,14 @@ function showversions(file) {
                 button.type = "button";
                 button.addEventListener("click", () => document.location.href = `/company/version?ver=${response.versions[i].id}`);
                 button.value = "Просмотр";
+                button.setAttribute("class", "button-table");
 
                 let clonebutton = document.createElement("input");
                 let tdCBut = document.createElement("td");
                 clonebutton.type = "button";
                 //delbutton.addEventListener("click", () => deleteVersion(response.versions[i].id));
                 clonebutton.value = "Клонировать";
+                clonebutton.setAttribute("class", "button-table");
 
                 tdVersion.innerText = response.versions[i].version;
                 let tempdatecreate = new Date(response.versions[i].datecreate).toLocaleString("ru");
@@ -131,28 +135,32 @@ function showversions(file) {
                 tr.appendChild(tdDate);
                 tr.appendChild(tdDateM);
                 tr.appendChild(tdAuthor);
-                tr.appendChild(tdBut);
                 tr.appendChild(tdCBut);
+                tr.appendChild(tdBut);
+                
 
                 parentElement.after(tr);
             }
-            let tdEmpty = document.createElement("td");
-            let tdName = document.createElement("td");
-            let tdDC = document.createElement("td");
-            let tdDM = document.createElement("td");
-            let tdA = document.createElement("td");
-            let tr = document.createElement("tr");
-            tdName.innerText = "Название";
-            tdDC.innerText = "Дата создания";
-            tdDM.innerText = "Дата изменения";
-            tdA.innerText = "Автор";
-            tr.appendChild(tdEmpty);
-            tr.appendChild(tdName);
-            tr.appendChild(tdDC);
-            tr.appendChild(tdDM);
-            tr.appendChild(tdA);
-            let parentElement = document.getElementById(response.versions[0].root);
-            parentElement.after(tr);
+            if (!document.getElementById("nametr")) {
+                let tdEmpty = document.createElement("td");
+                let tdName = document.createElement("td");
+                let tdDC = document.createElement("td");
+                let tdDM = document.createElement("td");
+                let tdA = document.createElement("td");
+                let trp = document.createElement("tr");
+                trp.setAttribute("id", "nametr")
+                tdName.innerText = "Название";
+                tdDC.innerText = "Дата создания";
+                tdDM.innerText = "Дата изменения";
+                tdA.innerText = "Автор";
+                trp.appendChild(tdEmpty);
+                trp.appendChild(tdName);
+                trp.appendChild(tdDC);
+                trp.appendChild(tdDM);
+                trp.appendChild(tdA);
+                let parentElement = document.getElementById(response.versions[0].root);
+                parentElement.after(trp);
+            }
         });
 
     })

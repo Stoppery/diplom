@@ -61,11 +61,14 @@ async function showprojects() {
                 button.addEventListener("click", () => showversions(response.projects[i].file));
                 button.value = "Редактировать";
                 button.title = "Просмотр версий проекта или создание первой версии";
+                button.setAttribute("class", "button-table");
+
                 let delbutton = document.createElement("input");
                 delbutton.type = "button";
                 delbutton.addEventListener("click", () => deleteProject(response.projects[i].file))
                 delbutton.value = "Удалить";
                 delbutton.title = "Удаление проекта, включая все версии";
+                delbutton.setAttribute("class", "button-table");
 
 
                 tdFile.innerText = response.projects[i].file;
@@ -172,6 +175,7 @@ function showversions(file) {
                 button.addEventListener("click", () => document.location.href = `../versions?ver=${response.versions[i].id}`);
                 button.value = "Редактировать";
                 button.title = "Переход в окно редактирования версии проекта";
+                button.setAttribute("class", "button-table");
 
                 let tdButton = document.createElement("td");
                 tdButton.appendChild(button);
@@ -181,6 +185,7 @@ function showversions(file) {
                 delbutton.addEventListener("click", () => deleteVersion(response.versions[i].id));
                 delbutton.value = "Удалить";
                 delbutton.title = "Удаление версии проекта";
+                delbutton.setAttribute("class", "button-table");
 
                 let tdDelbutton = document.createElement("td");
                 tdDelbutton.appendChild(delbutton);
@@ -202,23 +207,28 @@ function showversions(file) {
                 parentElement.after(tr);
                     
             }
-            let tdEmpty = document.createElement("td");
-            let tdName = document.createElement("td");
-            let tdDC = document.createElement("td");
-            let tdDM = document.createElement("td");
-            let tdA = document.createElement("td");
-            let tr = document.createElement("tr");
-            tdName.innerText = "Название";
-            tdDC.innerText = "Дата создания";
-            tdDM.innerText = "Дата изменения";
-            tdA.innerText = "Автор";
-            tr.appendChild(tdEmpty);
-            tr.appendChild(tdName);
-            tr.appendChild(tdDC);
-            tr.appendChild(tdDM);
-            tr.appendChild(tdA);
-            let parentElement = document.getElementById(response.versions[len - 1].root);
-            parentElement.after(tr);
+            if (!document.getElementById("nametr")) {
+                let tdEmpty = document.createElement("td");
+                let tdName = document.createElement("td");
+                let tdDC = document.createElement("td");
+                let tdDM = document.createElement("td");
+                let tdA = document.createElement("td");
+                let trp = document.createElement("tr");
+                trp.setAttribute("id", "nametr")
+                tdName.innerText = "Название";
+                tdDC.innerText = "Дата создания";
+                tdDM.innerText = "Дата изменения";
+                tdA.innerText = "Автор";
+                trp.appendChild(tdEmpty);
+                trp.appendChild(tdName);
+                trp.appendChild(tdDC);
+                trp.appendChild(tdDM);
+                trp.appendChild(tdA);
+                let parentElement = document.getElementById(response.versions[len - 1].root);
+                parentElement.after(trp);
+            }
+
+            
         });
 
     })

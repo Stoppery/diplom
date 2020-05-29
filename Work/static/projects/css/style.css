@@ -27,7 +27,8 @@ body {
     top: 30%;
     right: 40%;
     align-items: center;
-    border: 2px solid #337ab7;
+    border: 1px solid #1976D2;
+    background-color: white;
     z-index: 9;
     
   }
@@ -67,7 +68,7 @@ body {
   
 
   .open-button {
-    background-color: #2196F3;
+    background-color: #1976D2;
     color: white;
     font-size: 15px;
     font-weight: bold;
@@ -80,6 +81,21 @@ body {
     right: 80px;
     width: 280px;
   }
+
+.button-table{
+    background-color: #1976D2;
+    color: white;
+    font-size: 14px;
+    font-weight: bold;
+    border: none;
+    padding: 5px 10px;
+    opacity: 0.7;
+}
+
+.button-table:hover{
+    opacity: 1;
+}
+
 
   .form-container .cancel {
     background-color: #448AFF;

@@ -24,6 +24,7 @@ async function showVersion(){
             savebutton.title = "Сохранение версии проекта";
             savebutton.addEventListener("click", () => saveVersion(version));
             savebutton.value = "Сохранить";
+            savebutton.setAttribute("class", "button-table");
 
             let saveasbutton = document.createElement("input");
             let tdSaveAsBut = document.createElement("td");
@@ -31,6 +32,7 @@ async function showVersion(){
             saveasbutton.addEventListener("click", () => document.location.href = `../versions/create?ver=${version}`);
             saveasbutton.value = "Создать новую версию";
             saveasbutton.title = "Создание новой версии на базе текущей";
+            saveasbutton.setAttribute("class", "button-table");
 
            /* let createbutton = document.createElement("input");
             let tdCrBut = document.createElement("td");
