@@ -104,6 +104,10 @@ app.get('/company', (req, res) => {
     res.sendFile(work.publicURL + '/company/company.html');
 });
 
+app.get('/company/version', (req, res) => {
+    res.sendFile(work.publicURL + '/company/compversion.html');
+});
+
 
 
 //  СЕРВЕРНАЯ ЧАСТЬ
@@ -418,6 +422,31 @@ app.route('/api/projects/version')
         version.version.deleteVersion(conn, vers);
         
         res.sendStatus(HttpStatus.OK);
+    })
+
+    .post((req, res) => {
+        if (!req.cookies.user) {
+            res.status(HttpStatus.UNAUTHORIZED).json({error: "Необходима авторизация"});
+            return
+        }
+
+        let decoded = jwt.decode(req.cookies.user);
+        let company = decoded.comp;
+        let email = decoded.email;
+        let conn = storage.createConnect(company);
+
+        let dateCreate = new Date().toUTCString();
+        let projectData = project.project.createProjectInV(conn, email, {
+            file: req.body.file,
+            datecreate: dateCreate,
+            datemodified: dateCreate,
+            rootver: req.body.rootver,
+        });
+        if (projectData.error) {
+            res.status(HttpStatus.INTERNAL_SERVER_ERROR).json({error: projectData.error});
+            return;
+        }
+        res.status(HttpStatus.CREATED).json({message: projectData.message});
     });
 
 app.route('/api/versions')
@@ -440,6 +469,22 @@ app.route('/api/versions')
         } else {
             res.status(HttpStatus.OK).json({versions: versionsData.versions});
         }
+    })
+    .post((req, res) => {
+        if (!req.cookies.user) {
+            res.status(HttpStatus.UNAUTHORIZED).json({error: "Необходима авторизация"});
+            return
+        }
+
+        let decoded = jwt.decode(req.cookies.user);
+        let company = decoded.comp;
+        let conn = storage.createConnect(company);
+
+        version.version.saveVersion(conn, {
+            id: req.body.id,
+            datemodified: req.body.datemodified,
+        });
+        res.status(HttpStatus.OK);
     });
    
 
@@ -458,10 +503,8 @@ app.route('/api/versions/create')
         let versionData = version.version.createVersion(conn, email, {
             version: req.body.name,
             datecreate: dateCreate,
-            proot: req.body.root,
+            rootver: req.body.rootver,
         });
-        console.log(req.body.name);
-        console.log(req.body.root);
         if (versionData.error) {
             res.status(HttpStatus.INTERNAL_SERVER_ERROR).json({error: versionData.error});
             return;
@@ -471,28 +514,6 @@ app.route('/api/versions/create')
 
 
 app.route('/api/company')
-  /*  .get((req, res) => {
-        if (!req.cookies.user) {
-            res.status(HttpStatus.UNAUTHORIZED).json({error: "Необходима авторизация"});
-            return
-        }
-
-        let decoded = jwt.decode(req.cookies.user);
-        let file = req.query.file;
-        if (file === "") {
-            res.status(HttpStatus.BAD_REQUEST).json({error: "Неверные параметры"});
-            return
-        }
-        let conn = storage.createConnect(decoded.comp);
-
-        let versionsData = version.version.getVersions(conn, decoded.email, file);
-
-        if (versionsData.error) {
-            res.status(HttpStatus.CREATED).json({versions: startData.versions});
-        } else {
-            res.status(HttpStatus.OK).json({versions: versionsData.versions});
-        }
-    })*/
     .get((req, res) => {
         if (!req.cookies.user) {
             res.status(HttpStatus.UNAUTHORIZED).json({error: "Необходима авторизация"});
@@ -509,6 +530,28 @@ app.route('/api/company')
     });
 
 
+
+app.route('/api/company/versions')
+    .get((req, res) => {
+        if (!req.cookies.user) {
+            res.status(HttpStatus.UNAUTHORIZED).json({error: "Необходима авторизация"});
+            return
+        }
+        let decoded = jwt.decode(req.cookies.user);
+        let conn = storage.createConnect(decoded.comp);
+        let file = req.query.file;
+        console.log("file", file);
+        if (file === "") {
+            res.status(HttpStatus.BAD_REQUEST).json({error: "Неверные параметры"});
+            return
+        }
+        let versionsData = version.version.getVersions(conn, decoded.email, file);
+        if (versionsData.error) {
+            res.status(HttpStatus.INTERNAL_SERVER_ERROR).json({error: versionsData.error});
+            return;
+        }
+        res.status(HttpStatus.OK).json({versions: versionsData.versions});
+    });
 
 app.route('/api/company/version')
     .get((req, res) => {
@@ -516,15 +559,21 @@ app.route('/api/company/version')
             res.status(HttpStatus.UNAUTHORIZED).json({error: "Необходима авторизация"});
             return
         }
+
         let decoded = jwt.decode(req.cookies.user);
-        let conn = storage.createConnect(decoded.comp);
-        let projectsData = project.project.getAllProjects(conn, decoded.email);
-        if (projectsData.error) {
-            res.status(HttpStatus.INTERNAL_SERVER_ERROR).json({error: projectsData.error});
-            return;
+        let vers = req.query.ver;
+        if (vers === "") {
+            res.status(HttpStatus.BAD_REQUEST).json({error: "Неверные параметры"});
+            return
         }
-        res.status(HttpStatus.OK).json({projects: projectsData.projects});
-    });
+        let conn = storage.createConnect(decoded.comp);
+        let versionsData = version.version.showVersion(conn, vers);
+        if (versionsData.error) {
+            res.status(HttpStatus.NOT_FOUND).json({error: versionsData.error});
+        } else {
+            res.status(HttpStatus.OK).json({versions: versionsData.versions});
+        }
+    })
 
 let port = process.env.PORT || 3000;
 

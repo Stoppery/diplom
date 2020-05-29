@@ -46,7 +46,7 @@ module.exports.project = {
     },
 
     getAllProjects: function (conn, email) {
-        let rows = conn.querySync(`SELECT p.id, file, datecreation, datelastmodified, users.name, depth FROM project as p JOIN users ON author=users.id WHERE email != '${email}' ORDER BY datecreation`);
+        let rows = conn.querySync(`SELECT DISTINCT p.id, file, p.datecreation, datelastmodified, users.name, depth FROM project as p JOIN users ON author=users.id INNER JOIN version ON proot=p.id WHERE email != '${email}' ORDER BY datecreation`);
         let result = {
             projects: [],
             error: null,
@@ -66,7 +66,7 @@ module.exports.project = {
             return result;
         }
 
-        result.error = "Can`t get projects";
+        result.error = "В вашей компании еще нет проектов";
         return result
     },
 
@@ -115,5 +115,44 @@ module.exports.project = {
         }
         conn.querySync(`DELETE FROM project WHERE file = '${file}'`);
     },
-   
+   createProjectInV: function(conn, email, project){
+    let row = conn.querySync(`SELECT id FROM users WHERE email = '${email}'`);
+    if(row.length > 0){
+        let idUs = row[0].id;
+        let res = conn.querySync(`SELECT file FROM project WHERE author = '${idUs}'`);
+        let samename = false;
+        if(res.length > 0){
+            for (let i = 0; i < res.length; i++) {
+                if(res[i].file === project.file){
+                    samename = true;
+                }
+            }
+        }
+        if(samename) {
+           return {
+               message: null,
+               error: "Проект с данным именем уже существует. Пожалуйста, выберете другое имя"
+            }
+        } else {
+            let row = conn.querySync(`SELECT data, depth FROM version JOIN project ON proot = project.id WHERE version.id = ${project.rootver}`);
+            if(row.length > 0){  
+                conn.querySync(`INSERT into project(file, datecreation, datelastmodified, depth, author)` + 
+                `VALUES('${project.file}','${project.datecreate}','${project.datemodified}',${row[0].depth}, ${idUs});`);
+                let res = conn.querySync(`SELECT id FROM project WHERE file ='${project.file}'`);
+                conn.querySync(`INSERT into version(version, datecreation, datemodified, data, proot, authorv)` + 
+                    `VALUES('version 1', '${project.datecreate}', '${project.datecreate}', '${row[0].data}', ${res[0].id}, ${idUs});`);
+                return {
+                    message: "Проект успешно создан",
+                    error: null
+                }
+            }
+        }
+    } else { 
+        return {
+            message: null,
+            error: "Пользователь не найден"
+         }
+    }
+    
+   }
 };

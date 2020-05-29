@@ -25,15 +25,13 @@
         </nav>
         <div class="container row">
            <h1>Create of version</h1>
-           <div class="jumbotron col-sm-4 pull-center">
+           <div class="themed-grid-col col-sm-8 pull-center">
             <div id="error"></div>
-            <div>
-                <label>Name of version:</label>
-                <input id="name" type="text" name="name"/>
-            </div>
-            <div>
-                <input class="btn btn-primary" onclick="createVersion()" value="Создать"/>
-            </div>
+            <form action="#" class="form-container">
+                <label for="file"><b>Название версии</b></label>
+                <input id="name" type="text" placeholder="Version 1" name="name" required>
+                <button type="button" class="btn btn-primary" onclick="createVersion()">Создать</button>
+            </form>
         </div>
         <script src="createversion.js"></script>
     </body>

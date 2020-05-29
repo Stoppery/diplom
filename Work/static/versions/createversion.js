@@ -3,7 +3,7 @@ function createVersion() {
     let rootid = document.location.search.substring(document.location.search.indexOf('=') + 1);
     let version = {
         name: nameInput.value,
-        root: rootid,
+        rootver: rootid,
     };
 
     fetch('http://localhost:3000/api/versions/create', {

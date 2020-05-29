@@ -1,7 +1,7 @@
 <html>
     <head>
         <title>Application</title>
-        <link rel="stylesheet" href="css/style.css">
+        <link rel="stylesheet" href="../projects/css/style.css">
     </head>
     <body class="container">
         <div class="page-header">
@@ -23,17 +23,6 @@
                 </div><!-- /.navbar-collapse -->
             </div><!-- /.container-fluid -->
         </nav>
-        <div>
-            <button type="button" title="Создание нового проекта на базе текущей версии" class="open-button" onclick="showForm()">Создать новый проект</button>
-        </div>
-        <div class="form-popup" id="myForm">
-            <form action="#" class="form-container">
-              <label for="file"><b>Название проекта</b></label>
-              <input id="file" type="text" placeholder="Project 1" name="file" required>
-              <button type="button" class="btn btn-primary" onclick="createProjectInV()">Создать</button>
-              <button type="button" class="btn cancel" onclick="closeForm()">Закрыть</button>
-            </form>
-          </div>
         <div class="container row">
            <h1 id="ver">Version </h1>
             <div id="proj" class="themed-grid-col col-sm-8 pull-center">
@@ -43,6 +32,6 @@
                 </table>
             </div>
         </div>
-        <script src="myversion.js"></script>
+        <script src="compversion.js"></script>
     </body>
 </html>
