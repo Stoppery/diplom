@@ -21,7 +21,7 @@ module.exports.project = {
         };
     },
     getProjects: function (conn, email) {
-        let rows = conn.querySync(`SELECT p.id, file, datecreation, datelastmodified, users.name, depth FROM project as p JOIN users ON author=users.id WHERE email = '${email}'`);
+        let rows = conn.querySync(`SELECT p.id, file, datecreation, datelastmodified, users.name, depth FROM project as p JOIN users ON author=users.id WHERE email = '${email}' ORDER BY datelastmodified DESC`);
         let result = {
             projects: [],
             error: null,
@@ -46,7 +46,7 @@ module.exports.project = {
     },
 
     getAllProjects: function (conn, email) {
-        let rows = conn.querySync(`SELECT DISTINCT p.id, file, p.datecreation, datelastmodified, users.name, depth FROM project as p JOIN users ON author=users.id INNER JOIN version ON proot=p.id WHERE email != '${email}' ORDER BY datecreation`);
+        let rows = conn.querySync(`SELECT DISTINCT p.id, file, p.datecreation, datelastmodified, users.name, depth FROM project as p JOIN users ON author=users.id INNER JOIN version ON proot=p.id WHERE email != '${email}' ORDER BY datecreation DESC`);
         let result = {
             projects: [],
             error: null,

@@ -91,6 +91,8 @@ module.exports.version = {
     },
     saveVersion: function(conn, version){
         conn.querySync(`UPDATE version SET datemodified = '${version.datemodified}' WHERE id = ${version.id}`);
+        let row = conn.querySync(`SELECT proot FROM version WHERE id = ${version.id}`);
+        conn.querySync(`UPDATE project SET datelastmodified ='${version.datemodified}' WHERE id = ${row[0].proot}`);
         
     },
     showVersion: function(conn, idV){
