@@ -3,8 +3,8 @@
 const express = require('express');
 const path = require('path');
 const app = express();
-const db = require('./storage/database');
-const user = require('./storage/user');
+const db = require('./Auth/storage/database');
+const user = require('./Auth/storage/user');
 const jwt = require('jsonwebtoken');
 const cookieParser = require('cookie-parser');
 const HttpStatus = require('http-status-codes');
@@ -15,15 +15,12 @@ const pgUser = "tsaanstu";
 const pgPassword = "Abc123456#";
 const pgPort = "5432#";
 
-const pgHost = "localhost";
-const pgUser = "nika";
-const pgPassword = "qwerty";
-const pgPort = "5432";
-
 const work = require('./Work/app');
 const project = require('./Work/storage/project');
 const version = require('./Work/storage/version');
 
+const maxProjectCount = 3;
+const maxProjectSubscribeCount = 10;
 
 class Storage {
     constructor(PGHOST, PGUSER, PGPASSWORD, PGPORT) {
@@ -112,8 +109,28 @@ app.get('/company/version', (req, res) => {
 });
 
 
-
 //  СЕРВЕРНАЯ ЧАСТЬ
+
+app.route('/api/buy')
+    .post(function (req, res) {
+        if (!req.cookies.user) {
+            res.status(HttpStatus.UNAUTHORIZED).json({error: "Необходима авторизация"});
+            return
+        }
+
+        let decoded = jwt.decode(req.cookies.user);
+
+        if (decoded.group !== "admin") {
+            res.status(HttpStatus.UNAUTHORIZED).json({error: "Вы не админ"});
+            return
+        }
+
+        let comp = decoded.email.substr(decoded.email.indexOf("@") + 1, decoded.email.lastIndexOf(".") - decoded.email.indexOf("@") - 1);
+        let conn = storage.createConnect("subscribe");
+
+        user.user.addAlwaysSubscribe(conn, comp);
+        res.sendStatus(HttpStatus.OK);
+    })
 
 app.route('/api/subscribe')
     .get(function (req, res) {
@@ -123,10 +140,11 @@ app.route('/api/subscribe')
         }
 
         let decoded = jwt.decode(req.cookies.user);
-        let email = decoded.email;
-        let comp = email.substr(email.indexOf("@") + 1, email.lastIndexOf(".") - email.indexOf("@") - 1);
-        let conn = storage.createConnect(comp);
-        let result = user.user.checkSubscribe(conn, decoded.email);
+
+        let comp = decoded.email.substr(decoded.email.indexOf("@") + 1, decoded.email.lastIndexOf(".") - decoded.email.indexOf("@") - 1);
+        let conn = storage.createConnect("subscribe");
+
+        let result = user.user.checkSubscribe(conn, comp);
         if (result) {
             res.sendStatus(HttpStatus.OK);
             return;
@@ -142,15 +160,14 @@ app.route('/api/subscribe')
         let decoded = jwt.decode(req.cookies.user);
 
         if (decoded.group !== "admin") {
-            res.status(HttpStatus.UNAUTHORIZED).json({error: "Необходима авторизация"});
+            res.status(HttpStatus.UNAUTHORIZED).json({error: "Вы не админ"});
             return
         }
 
-        let email = decoded.email;
-        let comp = email.substr(email.indexOf("@") + 1, email.lastIndexOf(".") - email.indexOf("@") - 1);
+        let comp = decoded.email.substr(decoded.email.indexOf("@") + 1, decoded.email.lastIndexOf(".") - decoded.email.indexOf("@") - 1);
+        let conn = storage.createConnect("subscribe");
 
-        let conn = storage.createConnect(comp);
-        user.user.renewSubscribeForMonth(conn);
+        user.user.renewSubscribeForMonth(conn, comp);
         res.sendStatus(HttpStatus.OK);
     });
 
@@ -390,6 +407,27 @@ app.route('/api/projects')
         let conn = storage.createConnect(company);
 
         let dateCreate = new Date().toUTCString();
+
+        let subscribeConnect = storage.createConnect("subscribe")
+        let projectCount = project.project.getProjectsCount(conn)
+
+        let result = user.user.checkSubscribe(subscribeConnect, company);
+        if (result) {
+            if (user.user.getSubscribeType(subscribeConnect, company)) {
+                if (projectCount >= maxProjectSubscribeCount) {
+                    res.status(HttpStatus.FORBIDDEN).json({error: "Слишком много проектов"});
+                    return
+                }
+            }
+            res.sendStatus(HttpStatus.OK);
+            return;
+        } else {
+            if (projectCount >= maxProjectCount) {
+                res.status(HttpStatus.FORBIDDEN).json({error: "Слишком много проектов"});
+                return
+            }
+        }
+
         let projectData = project.project.createProject(conn, email, {
             file: req.body.file,
             datecreate: dateCreate,
@@ -401,7 +439,6 @@ app.route('/api/projects')
             return;
         }
         res.status(HttpStatus.CREATED).json({message: projectData.message});
-
     })
     .delete((req, res) => {
         if (!req.cookies.user) {
@@ -533,7 +570,7 @@ app.route('/api/versions')
 
 
 app.route('/api/versions/create')
-    .post((req,res) =>{
+    .post((req, res) => {
         if (!req.cookies.user) {
             res.status(HttpStatus.UNAUTHORIZED).json({error: "Необходима авторизация"});
             return
@@ -572,7 +609,6 @@ app.route('/api/company')
         }
         res.status(HttpStatus.OK).json({projects: projectsData.projects});
     });
-
 
 
 app.route('/api/company/versions')

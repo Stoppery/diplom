@@ -20,6 +20,12 @@ module.exports.project = {
             error: "You haven`t any project"
         };
     },
+
+    getProjectsCount: function (conn) {
+        let rows = conn.querySync(`SELECT count(id) as count FROM project`);
+        return rows[0].count
+    },
+
     getProjects: function (conn, email) {
         let rows = conn.querySync(`SELECT p.id, file, datecreation, datelastmodified, users.name, depth FROM project as p JOIN users ON author=users.id WHERE email = '${email}' ORDER BY datelastmodified DESC`);
         let result = {
