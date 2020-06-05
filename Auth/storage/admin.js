@@ -1,6 +1,4 @@
 const Client = require('pg-native');
-const proj = require('../../Work/schema/projects');
-const vers = require('../../Work/schema/versions');
 
 const userSchema = `
     create table users (
@@ -22,7 +20,5 @@ module.exports.admin = {
         await client.querySync(`CREATE DATABASE ${name}`);
         client.connectSync(`postgresql://${user}:${password}@${host}:${port}/${name}`);
         await client.querySync(userSchema);
-        await client.querySync(proj.projectSchema);
-        await client.querySync(vers.versionSchema);
     }
 };

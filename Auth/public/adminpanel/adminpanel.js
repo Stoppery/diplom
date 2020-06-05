@@ -30,7 +30,7 @@ async function getUsers() {
         }
         status = true;
     });
-    
+
     console.log("2");
     fetch('http://localhost:3000/api/showUsers', {
         method: 'GET',
@@ -50,6 +50,11 @@ async function getUsers() {
                 let tdEmail = document.createElement("td");
                 let tdStatus = document.createElement("td");
 
+                let button = document.createElement("input");
+                button.type = "button";
+                button.addEventListener("click", () => deleteUser(response.users[i].email));
+                button.value = "Удалить";
+
                 tdName.innerText = response.users[i].name;
                 tdSurname.innerText = response.users[i].surname;
                 tdPhone.innerText = response.users[i].phone;
@@ -61,7 +66,6 @@ async function getUsers() {
                 tr.appendChild(tdPhone);
                 tr.appendChild(tdEmail);
                 tr.appendChild(tdStatus);
-        
                 if (status) {
                     let button = document.createElement("input");
                     button.type = "button";
@@ -69,6 +73,7 @@ async function getUsers() {
                     button.value = "Удалить";
                     tr.appendChild(button);
                 }
+
                 table.appendChild(tr);
             }
         });

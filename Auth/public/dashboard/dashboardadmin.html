@@ -26,35 +26,38 @@
 <div class="container row">
     <h1>Hi, Welcome to your Dashboard,ADMIN</h1>
     <div class="jumbotron col-sm-4 pull-center">
-    <div id="error"></div>
-    <div>
-        <label>Name:</label>
-        <input id="name" type="text" name="name"/>
+        <div id="error"></div>
+        <div>
+            <label>Name:</label>
+            <input id="name" type="text" name="name"/>
+        </div>
+        <div>
+            <label>Surname:</label>
+            <input id="surname" type="text" name="surname"/>
+        </div>
+        <div>
+            <label>Phone:</label>
+            <input id="phone" type="text" name="phone"/>
+        </div>
+        <div>
+            <label>Email:</label>
+            <input id="email" type="text" name="email"/>
+        </div>
+        <div>
+            <label>Password:</label>
+            <input id="password" type="password" name="password"/>
+        </div>
+        <div>
+            <label>Status:</label>
+            <input id="status" type="text" name="status"/>
+        </div>
+        <div>
+            <input class="btn btn-primary" onclick="createUser()" value="Create"/>
+        </div>
+        <div onclick="test()">
+            продлить подписку
+        </div>
     </div>
-    <div>
-        <label>Surname:</label>
-        <input id="surname" type="text" name="surname"/>
-    </div>
-    <div>
-        <label>Phone:</label>
-        <input id="phone" type="text" name="phone"/>
-    </div>
-    <div>
-        <label>Email:</label>
-        <input id="email" type="text" name="email"/>
-    </div>
-    <div>
-        <label>Password:</label>
-        <input id="password" type="password" name="password"/>
-    </div>
-    <div>
-        <label>Status:</label>
-        <input id="status" type="text" name="status"/>
-    </div>
-    <div>
-        <input class="btn btn-primary" onclick="createUser()" value="Create"/>
-    </div>
-</div>
 </div>
 <script src="dashboard.js"></script>
 </body>
