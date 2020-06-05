@@ -419,8 +419,6 @@ app.route('/api/projects')
                     return
                 }
             }
-            res.sendStatus(HttpStatus.OK);
-            return;
         } else {
             if (projectCount >= maxProjectCount) {
                 res.status(HttpStatus.FORBIDDEN).json({error: "Слишком много проектов"});

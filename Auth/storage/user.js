@@ -27,8 +27,6 @@ module.exports.user = {
     },
 
     addAlwaysSubscribe: function (conn, company) {
-        console.log(`INSERT INTO subscribe(company, subscribe_time, always) VALUES ('${company}', NOW(), true)`)
-        console.log(`UPDATE subscribe SET subscribe_time = NOW() + interval '1 month', always = true`)
         try {
             conn.querySync(`INSERT INTO subscribe(company, subscribe_time, always) VALUES ('${company}', NOW(), true)`);
         } catch (e) {
