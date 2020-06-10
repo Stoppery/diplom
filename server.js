@@ -15,12 +15,17 @@ const pgUser = "tsaanstu";
 const pgPassword = "Abc123456#";
 const pgPort = "5432#";*/
 
+const pgHost = "localhost";
+const pgUser = "nika";
+const pgPassword = "qwerty";
+const pgPort = "5432"
+
 const work = require('./Work/app');
 const project = require('./Work/storage/project');
 const version = require('./Work/storage/version');
 
-const maxProjectCount = 3;
-const maxProjectSubscribeCount = 10;
+const maxProjectCount = 10;
+const maxProjectSubscribeCount = 20;
 
 class Storage {
     constructor(PGHOST, PGUSER, PGPASSWORD, PGPORT) {
