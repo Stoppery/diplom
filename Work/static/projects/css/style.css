@@ -26,7 +26,8 @@ body {
     display: none;
     position: fixed;
     top: 30%;
-    right: 40%;
+    right: 30%;
+    left: 30%;
     align-items: center;
     border: 1px solid #1976D2;
     background-color: white;
@@ -445,9 +446,13 @@ button .btn .btn-form{
     -ms-flex-align: center;
     align-items: center;
 }
+.form-control .mr-sm-2 input{
+    border: 1px solid rgb(107, 105, 105);
+}
 
 .mb-2, .my-2 {
     margin-bottom: .5rem!important;
+    
 }
 .mt-2, .my-2 {
     margin-top: .5rem!important;
@@ -561,7 +566,7 @@ form input[type=search] {
       .form-container-search .btn {
         background-color: #1976D2;
         color: white;
-        padding: 16px 20px;
+        padding: 16px 10px;
         border: none;
         cursor: pointer;
         width: 80%;
@@ -575,18 +580,18 @@ form input[type=search] {
       .form-container-search input[type=date], .form-container-search select{
         width: 80%;
         padding: 15px;
-        margin: 5px 0 22px 100px;
+        margin: 5px 0 10px 100px;
         border: none;
         background: #f1f1f1;
         font-size: 15px;
       }
 
       .form-container-search input[type=date]{
-        margin: 5px 0 22px 5px;
+        margin: 5px 0 10px 5px;
       }
 
       .form-container-search select{
-        margin: 5px 0 22px 100px;
+        margin: 5px 0 10px 100px;
       }
 
       .search-table td{
@@ -634,7 +639,6 @@ form input[type=search] {
     .tagsTable td{
         width: 50px;
         margin: 5px 0 22px 0;
-     
     }
 
     .search-table-tags {
@@ -642,7 +646,6 @@ form input[type=search] {
         border-collapse: separate;
         width: 80%; 
         padding: 10px;
-        
       }
       
     .form-popup-tag{
@@ -650,11 +653,12 @@ form input[type=search] {
         position: fixed;
         margin-left: 30%;
         margin-right: 30%;
+        align-self: center;
         top: 30%;
         align-items: center;
         border: 1px solid #1976D2;
         background-color: white;
         z-index: 9;
-        width: 500px;
+        width: 550px;
         overflow: auto;
     }
