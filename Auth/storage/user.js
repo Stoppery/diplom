@@ -8,13 +8,30 @@ module.exports.user = {
             `VALUES ('${user.name}', '${user.surname}', '${user.phone}', '${user.email}', '${passwordHash}', '${user.status}', '${user.group}');`);
     },
 
-    checkSubscribe: function (conn, email) {
-        let rows = conn.querySync(`SELECT subscribe FROM users WHERE email = '${email}' AND subscribe >= NOW()`);
+    checkSubscribe: function (conn, company) {
+        let rows = conn.querySync(`SELECT company FROM subscribe WHERE company = '${company}' AND (subscribe_time >= NOW() OR always is true)`);
         return rows.length > 0
     },
 
-    renewSubscribeForMonth: function (conn) {
-        conn.querySync(`UPDATE users SET subscribe = NOW() + interval '1 month'`);
+    getSubscribeType: function (conn, company) {
+        let rows = conn.querySync(`SELECT always as type FROM subscribe WHERE company = '${company}' AND (subscribe_time >= NOW() OR always is true)`);
+        return rows[0].type
+    },
+
+    renewSubscribeForMonth: function (conn, company) {
+        try {
+            conn.querySync(`INSERT INTO subscribe(company, subscribe_time) VALUES ('${company}', NOW() + interval '1 month')`);
+        } catch (e) {
+            conn.querySync(`UPDATE subscribe SET subscribe_time = NOW() + interval '1 month', always = false`);
+        }
+    },
+
+    addAlwaysSubscribe: function (conn, company) {
+        try {
+            conn.querySync(`INSERT INTO subscribe(company, subscribe_time, always) VALUES ('${company}', NOW(), true)`);
+        } catch (e) {
+            conn.querySync(`UPDATE subscribe SET subscribe_time = NOW(), always = true`);
+        }
     },
 
     updateUserPassword: function (conn, email, password) {
