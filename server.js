@@ -3,17 +3,17 @@
 const express = require('express');
 const path = require('path');
 const app = express();
-const db = require('./storage/database');
-const user = require('./storage/user');
+const db = require('./Auth/storage/database');
+const user = require('./Auth/storage/user');
 const jwt = require('jsonwebtoken');
 const cookieParser = require('cookie-parser');
 const HttpStatus = require('http-status-codes');
 const publicURL = __dirname + "/Auth/public/";
 const secretWord = "kek";
-const pgHost = "localhost";
+/*const pgHost = "localhost";
 const pgUser = "tsaanstu";
 const pgPassword = "Abc123456#";
-const pgPort = "5432#";
+const pgPort = "5432#";*/
 
 const pgHost = "localhost";
 const pgUser = "nika";
