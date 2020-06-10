@@ -3,14 +3,17 @@
 const express = require('express');
 const path = require('path');
 const app = express();
-const db = require('./Auth/storage/database');
-const user = require('./Auth/storage/user');
-const admin = require('./Auth/storage/admin');
+const db = require('./storage/database');
+const user = require('./storage/user');
 const jwt = require('jsonwebtoken');
 const cookieParser = require('cookie-parser');
 const HttpStatus = require('http-status-codes');
 const publicURL = __dirname + "/Auth/public/";
 const secretWord = "kek";
+const pgHost = "localhost";
+const pgUser = "tsaanstu";
+const pgPassword = "Abc123456#";
+const pgPort = "5432#";
 
 const pgHost = "localhost";
 const pgUser = "nika";
@@ -117,12 +120,53 @@ app.get('/search', (req,res) => {
 
 //  СЕРВЕРНАЯ ЧАСТЬ
 
+app.route('/api/subscribe')
+    .get(function (req, res) {
+        if (!req.cookies.user) {
+            res.status(HttpStatus.UNAUTHORIZED).json({error: "Необходима авторизация"});
+            return
+        }
+
+        let decoded = jwt.decode(req.cookies.user);
+        let email = decoded.email;
+        let comp = email.substr(email.indexOf("@") + 1, email.lastIndexOf(".") - email.indexOf("@") - 1);
+        let conn = storage.createConnect(comp);
+        let result = user.user.checkSubscribe(conn, decoded.email);
+        if (result) {
+            res.sendStatus(HttpStatus.OK);
+            return;
+        }
+        res.sendStatus(HttpStatus.NOT_FOUND);
+    })
+    .post(function (req, res) {
+        if (!req.cookies.user) {
+            res.status(HttpStatus.UNAUTHORIZED).json({error: "Необходима авторизация"});
+            return
+        }
+
+        let decoded = jwt.decode(req.cookies.user);
+
+        if (decoded.group !== "admin") {
+            res.status(HttpStatus.UNAUTHORIZED).json({error: "Необходима авторизация"});
+            return
+        }
+
+        let email = decoded.email;
+        let comp = email.substr(email.indexOf("@") + 1, email.lastIndexOf(".") - email.indexOf("@") - 1);
+
+        let conn = storage.createConnect(comp);
+        user.user.renewSubscribeForMonth(conn);
+        res.sendStatus(HttpStatus.OK);
+    });
+
 app.get('/api/admin/check', (req, res) => {
     if (!req.cookies.user) {
         res.status(HttpStatus.UNAUTHORIZED).json({error: "Необходима авторизация"});
         return
     }
+
     let decoded = jwt.decode(req.cookies.user);
+
     if (decoded.group === "admin") {
         res.sendStatus(HttpStatus.OK);
         return
@@ -384,7 +428,7 @@ app.route('/api/projects')
         }
         let conn = storage.createConnect(decoded.comp);
         project.project.deleteProject(conn, file);
-        
+
         res.sendStatus(HttpStatus.OK);
     });
 
@@ -431,7 +475,7 @@ app.route('/api/projects/version')
         }
         let conn = storage.createConnect(decoded.comp);
         version.version.deleteVersion(conn, vers);
-        
+
         res.sendStatus(HttpStatus.OK);
     })
 
@@ -498,7 +542,7 @@ app.route('/api/versions')
         });
         res.status(HttpStatus.OK);
     });
-   
+
 
 app.route('/api/versions/create')
     .post((req,res) =>{
