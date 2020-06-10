@@ -17,7 +17,7 @@ function deleteProject(file) {
 
 
 async function showprojects() {
-    fetch('http://localhost:3000/api/projects', {
+    fetch(`http://localhost:3000/api/projects`, {
         method: 'GET',
         headers: {
             'Content-Type': 'application/json',
@@ -251,6 +251,87 @@ function deleteVersion(ver){
     table.id = "projectTable";
     document.getElementById("proj").appendChild(table);
     showprojects();
+}
+
+function createSearchForm(){
+    fetch('http://localhost:3000/api/projects/createSearch', {
+        method: 'GET',
+        headers: {
+            'Content-Type': 'application/json',
+            'Charset': 'utf-8',
+        },
+    }).then(response => {
+        response.json().then(response => {
+            if (response.users.length === 0) {
+                return
+            }
+            for(let i=0; i < response.users.length; i++){
+                if (document.getElementById("auth" + response.users[i].id)) {
+                    continue
+                }
+                let opt = document.createElement("option");
+                opt.value = response.users[i].id;
+                opt.innerText = response.users[i].name + " " + response.users[i].surname;
+                opt.setAttribute("id", "auth" + response.users[i].id)
+                document.getElementById("author search").appendChild(opt);
+            }
+            if(response.tags.length > 0){
+            let tableTag = document.getElementById("tags table");
+                let trTag = document.createElement("tr");
+                console.log(response.tags.length);
+            for(let i = 0; i < response.tags.length; i++){
+                if (document.getElementById("tag" + response.tags[i].id)) {
+                    continue
+                }
+                let temp = document.createElement("input");
+                temp.type = "button";
+                temp.value = response.tags[i].description;
+                temp.setAttribute("id","tag" + response.tags[i].id);
+                temp.setAttribute("class", "button-tag-search");
+                temp.addEventListener("click", () => document.getElementById("tags search").value += (`${response.tags[i].description}` + '+'));
+                tdTemp = document.createElement("td");
+                tdTemp.appendChild(temp);
+                if(trTag.childElementCount > 4){
+                    tableTag.appendChild(trTag);
+                    trTag = document.createElement("tr");
+                }
+                    trTag.appendChild(tdTemp);
+            
+            }
+            tableTag.appendChild(trTag);
+            }
+        })
+    })
+}
+
+
+function searchFormOn(){
+    document.getElementById("rowSearch 1").style.display = "none";
+    document.getElementById("proj").style.display = "none";
+    document.getElementById("myproj").style.display = "none";
+    document.getElementById("create button").style.display = "none";
+    document.getElementById("searchForm").style.display = "block";
+    createSearchForm();
+}
+
+function searchFormOff(){
+    document.getElementById("searchForm").style.display = "none";
+    document.getElementById("rowSearch 1").style.display = "block";
+    document.getElementById("myproj").style.display = "block";
+    document.getElementById("create button").style.display = "block";
+    document.getElementById("proj").style.display = "block";
+}
+
+function searchProjects(){
+    let nameInput = document.getElementById("project search").value;
+    let authorInput = document.getElementById("author search").value;
+    let createStart = document.getElementById("start create").value;
+    let createEnd = document.getElementById("end create").value;
+    let modStart = document.getElementById("start modif").value;
+    let modEnd = document.getElementById("end modif").value;
+    let tags = document.getElementById("tags search").value;
+    console.log(tags);
+    window.location.href = `../search?name=${nameInput}&author=${authorInput}&dateCrSt=${createStart}&dateCrEnd=${createEnd}&dateModSt=${modStart}&dateModEnd=${modEnd}&tags=${tags}`;
 }
 
 showprojects();

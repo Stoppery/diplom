@@ -1,6 +1,8 @@
 async function showVersion(){
-    let version = document.location.search.substring(document.location.search.indexOf('=') + 1);
-    console.log(version);
+    let searchURL = new URL(document.location.href);
+    let version = searchURL.searchParams.get("ver");
+    //let version = document.location.search.substring(document.location.search.indexOf('=') + 1);
+    // console.log(version);
    fetch(`http://localhost:3000/api/versions?ver=${version}`, {
         method: 'GET',
         headers: {
@@ -34,12 +36,13 @@ async function showVersion(){
             saveasbutton.title = "Создание новой версии на базе текущей";
             saveasbutton.setAttribute("class", "button-table");
 
-           /* let createbutton = document.createElement("input");
-            let tdCrBut = document.createElement("td");
-            createbutton.type = "button";
-            createbutton.addEventListener("click", () => createProjectInV(version));
-            createbutton.value = "Создать новый проект";
-            createbutton.title = "Создание нового проекта на базе текущей версии";*/
+            let tagButtonCr = document.createElement("input");
+            let tdTagButtonCr = document.createElement("td");
+            tagButtonCr.type = "button";
+            tagButtonCr.value = "Добавить тег";
+            tagButtonCr.title = "Добавить тег к проекту";
+            tagButtonCr.addEventListener("click", () => showTagForm());
+            tagButtonCr.setAttribute("class", "button-table");
 
             tdVersion.innerText = response.versions[0].version;
             let tempdatecreate = new Date(response.versions[0].datecreate).toLocaleString("ru");
@@ -49,22 +52,38 @@ async function showVersion(){
 
             tdSaveBut.appendChild(savebutton);
             tdSaveAsBut.appendChild(saveasbutton);
-           // tdCrBut.appendChild(createbutton);
+            tdTagButtonCr.appendChild(tagButtonCr);
             tr.appendChild(tdVersion);
             tr.appendChild(tdDate);
             tr.appendChild(tdDateM);
             tr.appendChild(tdSaveBut);
             tr.appendChild(tdSaveAsBut);
-            //tr.appendChild(tdCrBut);
+            tr.appendChild(tdTagButtonCr);
             table.appendChild(tr);
-                  /*let tdCreate = document.createElement("td");
-                let createbutton = document.createElement("input");
-                createbutton.setAttribute("id","but" + response.versions[i].id);
-                createbutton.type = "button";
-                createbutton.value = "Создать новую версию";
-                createbutton.addEventListener("click", () => document.location.href = `../versions/create?file=${response.versions[i].root}`);
-                tdCreate.appendChild(createbutton);
-                tr.appendChild(tdCreate);*/
+
+            if(response.tags.length > 0){
+                console.log("length ", response.tags.length);
+                let tableTag = document.getElementById("tagsTable");
+                let trTag = document.createElement("tr");
+                for(let i = 0; i < response.tags.length; i++){
+                    let temp = document.createElement("input");
+                    temp.type = "button";
+                    temp.value = response.tags[i].description;
+                    temp.setAttribute("id", response.tags[i].tagId);
+                    temp.setAttribute("class", "button-tag");
+                    temp.addEventListener("click", () => removeTag(response.tags[i].tagId, response.tags[i].projectId, version));
+                    tdTemp = document.createElement("td");
+                    tdTemp.appendChild(temp);
+                    if(trTag.childElementCount > 4){
+                        tableTag.appendChild(trTag);
+                        trTag = document.createElement("tr");
+                    }
+                    trTag.appendChild(tdTemp);
+                }
+                tableTag.appendChild(trTag);
+            }
+          
+
         });
     })
 }
@@ -95,16 +114,20 @@ function saveVersion(version) {
     let table = document.createElement("table");
     table.id = "versionTable";
     document.getElementById("proj").appendChild(table);
+    document.getElementById("tagsTable").remove();
+    let tableTag = document.createElement("table");
+    tableTag.id = "tagsTable";
+    document.getElementById("tags").appendChild(tableTag);
     showVersion();
 }
 
 
 function showForm() {
-    document.getElementById("myForm").style.display = "block";
+    document.getElementById("versionForm").style.display = "block";
 }
 
 function closeForm() {
-    document.getElementById("myForm").style.display = "none";
+    document.getElementById("versionForm").style.display = "none";
 }
 
 function createProjectInV() {
@@ -140,5 +163,98 @@ function createProjectInV() {
     window.location.href = `../projects`;
 }
 
+function showTagForm() {
+    createSearchForm();
+    document.getElementById("tagForm").style.display = "block";
+}
+
+function closeTagForm() {
+    document.getElementById("tagForm").style.display = "none";
+}
+
+function createSearchForm(){
+    fetch('http://localhost:3000/api/projects/createSearch', {
+        method: 'GET',
+        headers: {
+            'Content-Type': 'application/json',
+            'Charset': 'utf-8',
+        },
+    }).then(response => {
+        response.json().then(response => {
+            if (response.tags.length === 0) {
+                return
+            }
+            let tableTag = document.getElementById("tags table");
+                let trTag = document.createElement("tr");
+                console.log(response.tags.length);
+            for(let i = 0; i < response.tags.length; i++){
+                if (document.getElementById("tag" + response.tags[i].id)) {
+                    continue
+                }
+                let temp = document.createElement("input");
+                temp.type = "button";
+                temp.value = response.tags[i].description;
+                temp.setAttribute("id","tag" + response.tags[i].id);
+                temp.setAttribute("class", "button-tag-search");
+                temp.addEventListener("click", () => document.getElementById("description").value += (`${response.tags[i].description}`));
+                tdTemp = document.createElement("td");
+                tdTemp.appendChild(temp);
+                if(trTag.childElementCount > 4){
+                    tableTag.appendChild(trTag);
+                    trTag = document.createElement("tr");
+                }
+                    trTag.appendChild(tdTemp);
+            
+            }
+            tableTag.appendChild(trTag);
+        })
+    })
+}
+
+
+
+function addTag(){
+    let version = document.location.search.substring(document.location.search.indexOf('=') + 1);
+    let nameInput = document.getElementById("description");
+    let tag = {
+        id: version,
+        description: nameInput.value
+    };
+
+    fetch('http://localhost:3000/api/versions/tag', {
+        method: 'POST',
+        body: JSON.stringify(tag),
+        headers: {
+            'Content-Type': 'application/json',
+            'Charset': 'utf-8',
+        },
+    }).then(response => {
+        if (response.status !== 200) {
+            response.json().then(response => {
+                let error = document.getElementById("error");
+                error.innerText = response.error;
+            });
+        } 
+    })
+    saveVersion(tag.id);
+}
+
+function removeTag(tag, project, version){
+    let rmTag = {
+        tagId: tag,
+        projectId: project
+    }
+    let isConfirmed = confirm('Удалить тег?');
+    if(isConfirmed){
+    fetch(`http://localhost:3000/api/versions/tag`, {
+        method: 'DELETE',
+        body: JSON.stringify(rmTag),
+        headers: {
+            'Content-Type': 'application/json',
+            'Charset': 'utf-8'
+        },
+    });}
+    saveVersion(version);
+}
 
 showVersion();

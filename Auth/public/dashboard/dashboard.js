@@ -38,3 +38,16 @@ function createUser() {
         }
     })
 }
+
+function checkUpdate(){
+    fetch('http://localhost:3000/api/update', {
+        method: 'GET',
+        headers: {
+            'Content-Type': 'application/json',
+            'Charset': 'utf-8'
+        },
+    }).then(response => {
+       window.location.href = `/dashboard`;
+    })
+
+}

@@ -15,10 +15,11 @@
                     <ul class="nav navbar-nav navbar-left">
                         <li><a href="/dashboard">Main page</a></li>
                         <li><a href="/projects">My projects</a></li>
+                        <li><a href="/company">All projects</a></li>
                     </ul>
                     <ul class="nav navbar-nav navbar-right">
                         <li><form class="form-inline my-2 my-lg-0">
-                            <input id="rowSearch 1" class="form-control mr-sm-2" type="search" placeholder="Search" aria-label="Поиск проектов" onfocus=searchFormOn()>
+                            <input id="rowSearch 1" class="form-control mr-sm-2" type="search" placeholder="Search" aria-label="Search" onfocus=searchFormOn()>
                               </form></li>
                         <li><a href="/api/logout">Log Out</a></li>
                     </ul>
@@ -26,14 +27,14 @@
             </div><!-- /.container-fluid -->
         </nav>
         <div class="container row">
-           <h1 id="myproj">Welcome to projects of company</h1>
-            <div id="proj" class="themed-grid-col col-sm-8 pull-center">
-                <div id="error"></div>
-                <table id="projectTable">
-                </table>
-            </div>
-        </div>
-        <div class="search-form" id="searchForm">
+            <h1 id="myproj">Results of search</h1>
+             <div id="proj" class="themed-grid-col col-sm-8 pull-center">
+                 <div id="error"></div>
+                 <div id="message"></div>
+                 <table id="projectTable"></table>
+             </div>
+         </div>
+         <div class="search-form" id="searchForm">
             <form action="" class="form-container-search">
             <label for="project search"><b>Название проекта</b></label><br>
             <input id="project search" type="text" placeholder="Project 1" name="project search"><br>
@@ -62,6 +63,6 @@
             <button type="button" class="btn cancel" onclick="searchFormOff()">Закрыть</button>
         </form>
           </div>
-        <script src="company.js"></script>
+        <script src="search.js"></script>
     </body>
 </html>

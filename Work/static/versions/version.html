@@ -26,7 +26,7 @@
         <div>
             <button type="button" title="Создание нового проекта на базе текущей версии" class="open-button" onclick="showForm()">Создать новый проект</button>
         </div>
-        <div class="form-popup" id="myForm">
+        <div class="form-popup" id="versionForm">
             <form action="#" class="form-container">
               <label for="file"><b>Название проекта</b></label>
               <input id="file" type="text" placeholder="Project 1" name="file" required>
@@ -40,7 +40,19 @@
                 <div id="error"></div>
                 <div id="message"></div>
                 <table id="versionTable">
-                </table>
+                </table><br>
+                <div class="form-popup-tag" id="tagForm">
+                    <form action="#" class="form-container">
+                      <label for="description"><b>Название</b></label>
+                      <input id="description" type="text" placeholder="Пример" name="description" onkeyup="var yratext=/['\s']/; if(yratext.test(this.value)) alert('В названии тега недопустимо использовать пробелы')" required>
+                      <table id="tags table" class="search-table-tags"></table>
+                      <button type="button" class="btn btn-primary" onclick="addTag()">Добавить</button>
+                      <button type="button" class="btn cancel" onclick="closeTagForm()">Закрыть</button>
+                    </form>
+                  </div>
+            </div>
+            <div id="tags" class="themed-grid-col col-sm-8 pull-center">
+                <table id="tagsTable" class="tagsTable"></table>
             </div>
         </div>
         <script src="myversion.js"></script>

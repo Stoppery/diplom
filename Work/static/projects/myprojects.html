@@ -16,15 +16,18 @@
                         <li><a href="/dashboard">Main page</a></li>
                         <li><a href="/company">All projects</a></li>
                     </ul>
-                        
+                     
                     <ul class="nav navbar-nav navbar-right">
+                        <li><form class="form-inline my-2 my-lg-0">
+                            <input id="rowSearch 1" class="form-control mr-sm-2" type="search" placeholder="Search" aria-label="Search" onfocus=searchFormOn()>
+                              </form></li>
                         <li><a href="/api/logout">Log Out</a></li>
                     </ul>
                 </div><!-- /.navbar-collapse -->
             </div><!-- /.container-fluid -->
         </nav>
         <div>
-            <button type="button" class="open-button" onclick="showForm()">Создать новый проект</button>
+            <button id="create button" type="button" class="open-button" onclick="showForm()">Создать новый проект</button>
         </div>
         <div class="form-popup" id="myForm">
             <form action="#" class="form-container">
@@ -37,14 +40,43 @@
             </form>
           </div>
         <div class="container row">
-           <h1>Welcome to your projects</h1>
+           <h1 id="myproj">Welcome to your projects</h1>
             <div id="proj" class="themed-grid-col col-sm-8 pull-center">
                 <div id="error"></div>
                 <div id="message"></div>
                 <table id="projectTable"></table>
-                </table>
             </div>
         </div>
+        <div class="search-form" id="searchForm">
+            <form action="" class="form-container-search">
+            <label for="project search"><b>Название проекта</b></label><br>
+            <input id="project search" type="text" placeholder="Project 1" name="project search"><br>
+            <label for="author search"><b>Автор проекта</b></label><br>
+            <select id="author search"  name="author search">
+                <option disabled selected></option>
+            </select><br>
+
+            <div class="search-table">
+                <label for="datecreation search"><b>Дата создания в диапазоне</b></label>
+            <table id="search table create">
+                <tr><td><input type="date" id="start create"></td>
+                 <td><input type="date" id="end create"></td></tr>
+                </table>
+                <label for="datemodified search"><b>Дата создания в диапазоне</b></label>
+                <table id="search table modified">
+                 <tr><td><input type="date" id="start modif"></td>
+                    <td><input type="date" id="end modif"></td></tr></table></div>
+            <label for="tags search"><b>Теги</b></label><br>
+            <!--<select id="tags search"  name="tags search" multiple>
+                <option disabled selected></option>
+            </select><br>-->
+            <input id="tags search" type="text" placeholder="Explain+" title="В случае добавления нескольких тегов вводите через +">
+            <table id="tags table" class="search-table"></table>
+            <button type="button" class="btn btn-primary" onclick="searchProjects()">Найти</button>
+            <button type="button" class="btn cancel" onclick="searchFormOff()">Закрыть</button>
+        </form>
+          </div>
         <script src="myprojects.js"></script>
+
     </body>
 </html>
