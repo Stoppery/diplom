@@ -1,5 +1,7 @@
 async function showVersion(){
-    let version = document.location.search.substring(document.location.search.indexOf('=') + 1);
+    let searchURL = new URL(document.location.href);
+    let version = searchURL.searchParams.get("ver");
+    //let version = document.location.search.substring(document.location.search.indexOf('=') + 1);
     console.log(version);
    fetch(`http://localhost:3000/api/company/version?ver=${version}`, {
         method: 'GET',
@@ -63,6 +65,28 @@ async function showVersion(){
                 createbutton.addEventListener("click", () => document.location.href = `../versions/create?file=${response.versions[i].root}`);
                 tdCreate.appendChild(createbutton);
                 tr.appendChild(tdCreate);*/
+            
+                if(response.tags.length > 0){
+                    console.log("length ", response.tags.length);
+                    let tableTag = document.getElementById("tagsTable");
+                    let trTag = document.createElement("tr");
+                    for(let i = 0; i < response.tags.length; i++){
+                        let temp = document.createElement("input");
+                        temp.type = "button";
+                        temp.value = response.tags[i].description;
+                        temp.setAttribute("id", response.tags[i].tagId);
+                        temp.setAttribute("class", "button-tag");
+                        temp.addEventListener("click", () => removeTag(response.tags[i].tagId, response.tags[i].projectId, version));
+                        tdTemp = document.createElement("td");
+                        tdTemp.appendChild(temp);
+                        if(trTag.childElementCount > 4){
+                            tableTag.appendChild(trTag);
+                            trTag = document.createElement("tr");
+                        }
+                        trTag.appendChild(tdTemp);
+                    }
+                    tableTag.appendChild(trTag);
+                }
         });
     })
 }

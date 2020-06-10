@@ -44,7 +44,7 @@ app.use(express.json());
 app.use(cookieParser());
 app.set('etag', false);
 app.use(express.static(path.join(work.publicURL)));
-// app.use(express.static(path.join(work.publicURL, '/projects/')));
+
 
 //  КЛИЕНТСКАЯ ЧАСТЬ
 
@@ -107,6 +107,11 @@ app.get('/company', (req, res) => {
 app.get('/company/version', (req, res) => {
     res.sendFile(work.publicURL + '/company/compversion.html');
 });
+
+app.get('/search', (req,res) => {
+    res.sendFile(work.publicURL + '/search/search.html')
+});
+
 
 
 
@@ -301,6 +306,12 @@ app.route('/api/user')
         res.sendStatus(HttpStatus.CREATED);
     });
 
+app.get('/api/update', (req,res) => {
+    let decoded = jwt.decode(req.cookies.user);
+    let conn = storage.createConnect(decoded.comp);
+    admin.admin.checkDB(conn);
+});
+
 app.route('/api/profile')
     .get((req, res) => {
         if (!req.cookies.user) {
@@ -449,6 +460,7 @@ app.route('/api/projects/version')
         res.status(HttpStatus.CREATED).json({message: projectData.message});
     });
 
+
 app.route('/api/versions')
     .get((req, res) => {
         if (!req.cookies.user) {
@@ -467,7 +479,7 @@ app.route('/api/versions')
         if (versionsData.error) {
             res.status(HttpStatus.NOT_FOUND).json({error: versionsData.error});
         } else {
-            res.status(HttpStatus.OK).json({versions: versionsData.versions});
+            res.status(HttpStatus.OK).json({versions: versionsData.versions, tags: versionsData.tags});
         }
     })
     .post((req, res) => {
@@ -512,6 +524,47 @@ app.route('/api/versions/create')
         res.status(HttpStatus.CREATED).json({idV: versionData.id});
     });
 
+    
+app.route('/api/versions/tag')
+    .post((req,res) =>{
+        if (!req.cookies.user) {
+            res.status(HttpStatus.UNAUTHORIZED).json({error: "Необходима авторизация"});
+            return
+        }
+        let decoded = jwt.decode(req.cookies.user);
+        let company = decoded.comp;
+        let conn = storage.createConnect(company);
+
+        let projectData = project.project.addTag(conn, {
+            description: req.body.description,
+            rootver: req.body.id,
+        });
+        if (projectData.error) {
+            res.status(HttpStatus.INTERNAL_SERVER_ERROR).json({error: projectData.error});
+            return;
+        }
+        res.status(HttpStatus.CREATED);
+    })
+    .delete((req, res) => {
+        if (!req.cookies.user) {
+            res.status(HttpStatus.UNAUTHORIZED).json({error: "Необходима авторизация"});
+            return
+        }
+
+        let decoded = jwt.decode(req.cookies.user);
+        let tagData = {
+            tagId: req.body.tagId,
+            projectId: req.body.projectId
+        }
+        
+        if (!tagData) {
+            res.status(HttpStatus.BAD_REQUEST).json({error: "Неверные параметры"});
+            return
+        }
+        let conn = storage.createConnect(decoded.comp);
+        project.project.removeTag(conn, tagData)
+        res.sendStatus(HttpStatus.OK);
+    });
 
 app.route('/api/company')
     .get((req, res) => {
@@ -550,7 +603,7 @@ app.route('/api/company/versions')
             res.status(HttpStatus.INTERNAL_SERVER_ERROR).json({error: versionsData.error});
             return;
         }
-        res.status(HttpStatus.OK).json({versions: versionsData.versions});
+        res.status(HttpStatus.OK).json({versions: versionsData.versions, tags: versionsData.tags});
     });
 
 app.route('/api/company/version')
@@ -574,6 +627,48 @@ app.route('/api/company/version')
             res.status(HttpStatus.OK).json({versions: versionsData.versions});
         }
     })
+
+app.route('/api/projects/createSearch')
+    .get((req,res) => {
+        if (!req.cookies.user) {
+            res.status(HttpStatus.UNAUTHORIZED).json({error: "Необходима авторизация"});
+            return
+        }
+        let decoded = jwt.decode(req.cookies.user);
+        let conn = storage.createConnect(decoded.comp);
+        let searchForm = project.project.createSearch(conn);
+        if(searchForm.error){
+            res.status(HttpStatus.INTERNAL_SERVER_ERROR).json({error: searchForm.error});
+            return
+        }
+        res.status(HttpStatus.OK).json({users: searchForm.users, tags: searchForm.tags});
+    })
+
+app.route('/api/search')
+    .get((req, res) => {
+        if (!req.cookies.user) {
+            res.status(HttpStatus.UNAUTHORIZED).json({error: "Необходима авторизация"});
+            return
+        }
+        let decoded = jwt.decode(req.cookies.user);
+        let conn = storage.createConnect(decoded.comp);
+        let searchData = {
+            fileName: req.query.name,
+            authorName: req.query.author,
+            startDateCreate: req.query.dateCrSt,
+            endDateCreate: req.query.dateCrEnd,
+            startDateMod: req.query.dateModSt,
+            endDateMod: req.query.dateModEnd,
+            tag: req.query.tags,
+        }
+        let projectsData = project.project.searchProjects(conn, searchData, decoded.email);
+        if (projectsData.error) {
+            res.status(HttpStatus.INTERNAL_SERVER_ERROR).json({error: projectsData.error});
+            return;
+        }
+        res.status(HttpStatus.OK).json({projects: projectsData.projects});
+    })
+
 
 let port = process.env.PORT || 3000;
 

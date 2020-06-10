@@ -71,6 +71,7 @@ module.exports.version = {
         let row = conn.querySync(`SELECT id, version, datecreation, datemodified, data, proot, authorv FROM version WHERE id='${idV}'`);
         let result = {
             versions: [],
+            tags: [],
             error: null,
         };
         if (row.length > 0) {
@@ -81,8 +82,19 @@ module.exports.version = {
                 datemodified: row[0].datemodified,
                 data: row[0].data,
                 root: row[0].proot,
-                author: row[0].name,
+                author: row[0].authorv,
             })
+
+            let res = conn.querySync(`SELECT project_tag.tag, project_tag.project, description FROM tag JOIN project_tag ON tag.id=project_tag.tag WHERE project = ${row[0].proot}`);
+            for(let i=0; i < res.length; i++){
+                result.tags.push({
+                    description: res[i].description,
+                    tagId: res[i].tag,
+                    projectId: res[i].project
+                })
+            }
+            //console.log(result);
+
             return result;
         } else {
             result.error = "Can`t get version";
@@ -94,27 +106,5 @@ module.exports.version = {
         let row = conn.querySync(`SELECT proot FROM version WHERE id = ${version.id}`);
         conn.querySync(`UPDATE project SET datelastmodified ='${version.datemodified}' WHERE id = ${row[0].proot}`);
         
-    },
-    showVersion: function(conn, idV){
-        let row = conn.querySync(`SELECT id, version, datecreation, datemodified, data, proot, authorv FROM version WHERE id='${idV}'`);
-        let result = {
-            versions: [],
-            error: null,
-        };
-        if (row.length > 0) {
-            result.versions.push({
-                id: row[0].id,
-                version: row[0].version,
-                datecreate: row[0].datecreation,
-                datemodified: row[0].datemodified,
-                data: row[0].data,
-                root: row[0].proot,
-                author: row[0].name,
-            })
-            return result;
-        } else {
-            result.error = "Can`t get version";
-            return result;
-        }
     }
 };

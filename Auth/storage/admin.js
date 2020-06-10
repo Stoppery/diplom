@@ -1,6 +1,8 @@
 const Client = require('pg-native');
 const proj = require('../../Work/schema/projects');
 const vers = require('../../Work/schema/versions');
+const tg = require('../../Work/schema/tag');
+const tg_ver = require('../../Work/schema/tag_project');
 
 const userSchema = `
     create table users (
@@ -24,5 +26,11 @@ module.exports.admin = {
         await client.querySync(userSchema);
         await client.querySync(proj.projectSchema);
         await client.querySync(vers.versionSchema);
+        await client.querySync(tg.tagSchema);
+        await client.querySync(tg_ver.tagProjectSchema);
+    },
+    checkDB: async function (conn) {
+        await conn.querySync(tg.tagSchema);
+        await conn.querySync(tg_ver.tagProjectSchema);
     }
 };

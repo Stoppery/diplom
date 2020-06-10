@@ -1,12 +1,33 @@
-async function showallprojects(){
-    fetch('http://localhost:3000/api/company', {
+async function showprojects() {
+    let searchURL = new URL(document.location.href);
+    console.log(document.location.href);
+    let nameInput = searchURL.searchParams.get("name");
+    let authorInput = searchURL.searchParams.get("author");
+    let createStart = searchURL.searchParams.get("dateCrSt");
+    let createEnd = searchURL.searchParams.get("dateCrEnd");
+    let modStart = searchURL.searchParams.get("dateModSt");
+    let modEnd = searchURL.searchParams.get("dateModEnd");
+    let tags = searchURL.searchParams.get("tags");
+    
+    /*console.log("name", nameInput);
+    console.log(authorInput);
+    console.log(createStart);
+    console.log(createEnd);
+    console.log(modStart);
+    console.log(modEnd);*/
+    fetch(`http://localhost:3000/api/search?name=${nameInput}&author=${authorInput}&dateCrSt=${createStart}&dateCrEnd=${createEnd}&dateModSt=${modStart}&dateModEnd=${modEnd}&tags=${tags}`, {
         method: 'GET',
         headers: {
             'Content-Type': 'application/json',
             'Charset': 'utf-8',
         },
     }).then(response => {
-        
+        if (response.status >= 300) {
+            response.json().then(response => {
+                let error = document.getElementById("error");
+                error.innerText = response.error;
+            });
+        } else{
         response.json().then(response => {
             let table = document.getElementById("projectTable");
             let tdName = document.createElement("td");
@@ -26,11 +47,11 @@ async function showallprojects(){
             tr.appendChild(tdA);
             tr.appendChild(tdP);
             table.appendChild(tr);
-
             for (let i = 0; i < response.projects.length; i++) {
                 let tr = document.createElement("tr");
-                tr.setAttribute("class", "themed-grid-col col-sm-8");
+
                 tr.setAttribute("id", response.projects[i].id);
+                tr.setAttribute("class", "themed-grid-col col-sm-8");
 
                 let tdFile = document.createElement("td");
                 let tdDate = document.createElement("td");
@@ -38,47 +59,71 @@ async function showallprojects(){
                 let tdAuthor = document.createElement("td");
                 let tdDepth = document.createElement("td");
 
-                let button = document.createElement("input");
-                let tdBut = document.createElement("td");
-                button.type = "button";
-                //button.addEventListener("click", () => deleteUser(response.users[i].email));
-                button.value = "Клонировать";
-                button.setAttribute("class", "button-table");
-                let watchbutton = document.createElement("input");
-                let tdWBut = document.createElement("td");
-                watchbutton.type = "button";
-                watchbutton.value = "Версии";
-                watchbutton.addEventListener("click",  () => showversions(response.projects[i].file));
-                watchbutton.setAttribute("class", "button-table");
-                
+                tdFile.innerText = response.projects[i].file;
                 let tempdatecreate = new Date(response.projects[i].datecreate).toLocaleString("ru");
                 let tempdatemodified = new Date(response.projects[i].datemodified).toLocaleString("ru");
-                tdFile.innerText = response.projects[i].file;
                 tdDate.innerText = tempdatecreate;
                 tdDateM.innerText = tempdatemodified;
                 tdAuthor.innerText = response.projects[i].author;
                 tdDepth.innerText = response.projects[i].depth;
-
-                tdBut.appendChild(button);
-                tdWBut.appendChild(watchbutton);
+              
                 tr.appendChild(tdFile);
                 tr.appendChild(tdDate);
-                tr.appendChild(tdDateM)
+                tr.appendChild(tdDateM);
                 tr.appendChild(tdAuthor);
                 tr.appendChild(tdDepth);
-                tr.appendChild(tdBut);
-                tr.appendChild(tdWBut);
 
+                if(response.projects[i].isAuthor){
+                    let button = document.createElement("input");
+                    button.type = "button";
+                    button.addEventListener("click", () => showversions(response.projects[i].file));
+                    button.value = "Редактировать";
+                    button.title = "Просмотр версий проекта или создание первой версии";
+                    button.setAttribute("class", "button-table");
+
+                    let delbutton = document.createElement("input");
+                    delbutton.type = "button";
+                    delbutton.addEventListener("click", () => deleteProject(response.projects[i].file))
+                    delbutton.value = "Удалить";
+                    delbutton.title = "Удаление проекта, включая все версии";
+                    delbutton.setAttribute("class", "button-table");
+
+                    let tdBut = document.createElement("td");
+                    let tdDel = document.createElement("td");
+
+                    tdBut.appendChild(button);
+                    tdDel.appendChild(delbutton);
+                    tr.appendChild(tdBut);
+                    tr.appendChild(tdDel);
+                    tr.setAttribute("name", "author");
+                } else { 
+                    let button = document.createElement("input");
+                    let tdBut = document.createElement("td");
+                    button.type = "button";
+                    //button.addEventListener("click", () => deleteUser(response.users[i].email));
+                    button.value = "Клонировать";
+                    button.setAttribute("class", "button-table");
+                    let watchbutton = document.createElement("input");
+                    let tdWBut = document.createElement("td");
+                    watchbutton.type = "button";
+                    watchbutton.value = "Версии";
+                    watchbutton.addEventListener("click",  () => showversions(response.projects[i].file));
+                    watchbutton.setAttribute("class", "button-table");
+                    tdBut.appendChild(button);
+                    tdWBut.appendChild(watchbutton);
+                    tr.appendChild(tdBut);
+                    tr.appendChild(tdWBut);
+                    tr.setAttribute("name", "not author");
+                }
                 table.appendChild(tr);
             }
-
         });
-    })
+     } })
 }
 
 
 function showversions(file) {
-    fetch(`http://localhost:3000/api/company/versions?file=${file}`, {
+    fetch(`http://localhost:3000/api/projects/version?file=${file}`, {
         method: 'GET',
         headers: {
             'Content-Type': 'application/json',
@@ -87,15 +132,15 @@ function showversions(file) {
     }).then(response => {
         response.json().then(response => {
             if (response.versions.length === 0) {
-                alert("В вашей компании еще нет версий проектов");
                 return
             }
-            console.log(response.versions.length);
-            for (let i = 0; i < response.versions.length; i++) {
+            let len = response.versions.length;
+
+            for (let i = 0; i < len; i++) {
                 if (document.getElementById("ep" + response.versions[i].id)) {
                     continue
                 }
-                console.log(response.versions[i]);
+
                 let parentElement = document.getElementById(response.versions[i].root);
                 let tr = document.createElement("tr");
                 tr.setAttribute("id", "ep" + response.versions[i].id);
@@ -107,20 +152,6 @@ function showversions(file) {
                 let tdDateM = document.createElement("td");
                 let tdAuthor = document.createElement("td");
 
-                let button = document.createElement("input");
-                let tdBut = document.createElement("td");
-                button.type = "button";
-                button.addEventListener("click", () => document.location.href = `/company/version?ver=${response.versions[i].id}`);
-                button.value = "Просмотр";
-                button.setAttribute("class", "button-table");
-
-                let clonebutton = document.createElement("input");
-                let tdCBut = document.createElement("td");
-                clonebutton.type = "button";
-                //delbutton.addEventListener("click", () => deleteVersion(response.versions[i].id));
-                clonebutton.value = "Клонировать";
-                clonebutton.setAttribute("class", "button-table");
-
                 tdVersion.innerText = response.versions[i].version;
                 let tempdatecreate = new Date(response.versions[i].datecreate).toLocaleString("ru");
                 tdDate.innerText = tempdatecreate;
@@ -128,18 +159,66 @@ function showversions(file) {
                 tdDateM.innerText = tempdatemodified;
                 tdAuthor.innerText = response.versions[i].author;
 
-                tdBut.appendChild(button);
-                tdCBut.appendChild(clonebutton);
                 tr.appendChild(tdEmpty);
                 tr.appendChild(tdVersion);
                 tr.appendChild(tdDate);
                 tr.appendChild(tdDateM);
                 tr.appendChild(tdAuthor);
-                tr.appendChild(tdCBut);
-                tr.appendChild(tdBut);
                 
+                let pName = document.getElementsByName("author");
+                for(let k = 0; k < pName.length; k++){
+                    let status = pName[k].getAttribute("id");
+                    if(status == parentElement.getAttribute("id")){
+                        let button = document.createElement("input");
+                        button.type = "button";
+                        button.addEventListener("click", () => document.location.href = `../versions?ver=${response.versions[i].id}`);
+                        button.value = "Редактировать";
+                        button.title = "Переход в окно редактирования версии проекта";
+                        button.setAttribute("class", "button-table");
+        
+                        let tdButton = document.createElement("td");
+                        tdButton.appendChild(button);
+        
+                        let delbutton = document.createElement("input");
+                        delbutton.type = "button";
+                        delbutton.addEventListener("click", () => deleteVersion(response.versions[i].id));
+                        delbutton.value = "Удалить";
+                        delbutton.title = "Удаление версии проекта";
+                        delbutton.setAttribute("class", "button-table");
+                        
+                        let tdDelbutton = document.createElement("td");
+                        tdDelbutton.appendChild(delbutton);
 
+                        tr.appendChild(tdButton);
+                        tr.appendChild(tdDelbutton);
+                    }
+                }
+                
+                let pNotName = document.getElementsByName("not author");
+                for(let k = 0; k < pNotName.length; k++){
+                    let status = pNotName[k].getAttribute("id");
+                    if(status == parentElement.getAttribute("id")){
+                        let button = document.createElement("input");
+                        let tdBut = document.createElement("td");
+                        button.type = "button";
+                        button.addEventListener("click", () => document.location.href = `/company/version?ver=${response.versions[i].id}`);
+                        button.value = "Просмотр";
+                        button.setAttribute("class", "button-table");
+
+                        let clonebutton = document.createElement("input");
+                        let tdCBut = document.createElement("td");
+                        clonebutton.type = "button";
+                        //delbutton.addEventListener("click", () => deleteVersion(response.versions[i].id));
+                        clonebutton.value = "Клонировать";
+                        clonebutton.setAttribute("class", "button-table");
+                        tdBut.appendChild(button);
+                        tdCBut.appendChild(clonebutton);
+                        tr.appendChild(tdCBut);
+                        tr.appendChild(tdBut);
+                    }
+                }
                 parentElement.after(tr);
+                    
             }
             if (!document.getElementById("nametr")) {
                 let tdEmpty = document.createElement("td");
@@ -158,13 +237,16 @@ function showversions(file) {
                 trp.appendChild(tdDC);
                 trp.appendChild(tdDM);
                 trp.appendChild(tdA);
-                let parentElement = document.getElementById(response.versions[0].root);
+                let parentElement = document.getElementById(response.versions[len - 1].root);
                 parentElement.after(trp);
             }
+
+            
         });
 
     })
 }
+
 
 function createSearchForm(){
     fetch('http://localhost:3000/api/projects/createSearch', {
@@ -222,7 +304,6 @@ function searchFormOn(){
     document.getElementById("rowSearch 1").style.display = "none";
     document.getElementById("proj").style.display = "none";
     document.getElementById("myproj").style.display = "none";
-
     document.getElementById("searchForm").style.display = "block";
     createSearchForm();
 }
@@ -246,4 +327,5 @@ function searchProjects(){
     window.location.href = `../search?name=${nameInput}&author=${authorInput}&dateCrSt=${createStart}&dateCrEnd=${createEnd}&dateModSt=${modStart}&dateModEnd=${modEnd}&tags=${tags}`;
 }
 
-showallprojects();
+
+showprojects();
