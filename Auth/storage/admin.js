@@ -1,11 +1,8 @@
 const Client = require('pg-native');
-<<<<<<< HEAD
 const proj = require('../../Work/schema/projects');
 const vers = require('../../Work/schema/versions');
 const tg = require('../../Work/schema/tag');
 const tg_ver = require('../../Work/schema/tag_project');
-=======
->>>>>>> fb48eb7deabb7967e845e3eca1e9124683bf5b41
 
 const userSchema = `
     create table users (

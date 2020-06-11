@@ -27,8 +27,8 @@
         </nav>
         <div class="container row">
            <h1 id="myproj">Welcome to projects of company</h1>
+           <div id="error"></div>
             <div id="proj" class="themed-grid-col col-sm-8 pull-center">
-                <div id="error"></div>
                 <table id="projectTable">
                 </table>
             </div>
@@ -48,14 +48,11 @@
                 <tr><td><input type="date" id="start create"></td>
                  <td><input type="date" id="end create"></td></tr>
                 </table>
-                <label for="datemodified search"><b>Дата создания в диапазоне</b></label>
+                <label for="datemodified search"><b>Дата изменения в диапазоне</b></label>
                 <table id="search table modified">
                  <tr><td><input type="date" id="start modif"></td>
                     <td><input type="date" id="end modif"></td></tr></table></div>
             <label for="tags search"><b>Теги</b></label><br>
-            <!--<select id="tags search"  name="tags search" multiple>
-                <option disabled selected></option>
-            </select><br>-->
             <input id="tags search" type="text" placeholder="Explain+" title="В случае добавления нескольких тегов вводите через +">
             <table id="tags table" class="search-table"></table>
             <button type="button" class="btn btn-primary" onclick="searchProjects()">Найти</button>

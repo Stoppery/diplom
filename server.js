@@ -2,12 +2,15 @@
 
 const express = require('express');
 const path = require('path');
-const app = express();
 const db = require('./Auth/storage/database');
 const user = require('./Auth/storage/user');
 const jwt = require('jsonwebtoken');
 const cookieParser = require('cookie-parser');
 const HttpStatus = require('http-status-codes');
+const work = require('./Work/app');
+const project = require('./Work/storage/project');
+const version = require('./Work/storage/version');
+
 const publicURL = __dirname + "/Auth/public/";
 const secretWord = "kek";
 /*const pgHost = "localhost";
@@ -20,12 +23,10 @@ const pgUser = "nika";
 const pgPassword = "qwerty";
 const pgPort = "5432"
 
-const work = require('./Work/app');
-const project = require('./Work/storage/project');
-const version = require('./Work/storage/version');
-
 const maxProjectCount = 10;
 const maxProjectSubscribeCount = 20;
+
+const app = express();
 
 class Storage {
     constructor(PGHOST, PGUSER, PGPASSWORD, PGPORT) {
@@ -40,8 +41,6 @@ class Storage {
     }
 }
 
-//let storage = new Storage('localhost', 'tsaanstu', 'Abc123456#', '5432');
-//let storage = new Storage('localhost', 'nika', 'qwerty', '5432');
 let storage = new Storage(pgHost, pgUser, pgPassword, pgPort);
 
 app.use(express.static(path.join(__dirname, '/Auth/public/')));
@@ -99,10 +98,6 @@ app.get('/projects', (req, res) => {
 
 app.get('/versions', (req, res) => {
     res.sendFile(work.publicURL + '/versions/version.html');
-});
-
-app.get('/versions/create', (req, res) => {
-    res.sendFile(work.publicURL + '/versions/newversion.html');
 });
 
 app.get('/company', (req, res) => {
@@ -421,9 +416,7 @@ app.route('/api/projects')
         let company = decoded.comp;
         let email = decoded.email;
         let conn = storage.createConnect(company);
-
         let dateCreate = new Date().toUTCString();
-
         let subscribeConnect = storage.createConnect("subscribe")
         let projectCount = project.project.getProjectsCount(conn)
 
@@ -452,7 +445,7 @@ app.route('/api/projects')
             res.status(HttpStatus.INTERNAL_SERVER_ERROR).json({error: projectData.error});
             return;
         }
-        res.status(HttpStatus.CREATED).json({message: projectData.message});
+        res.status(HttpStatus.CREATED);
     })
     .delete((req, res) => {
         if (!req.cookies.user) {
@@ -676,7 +669,6 @@ app.route('/api/company/versions')
         let decoded = jwt.decode(req.cookies.user);
         let conn = storage.createConnect(decoded.comp);
         let file = req.query.file;
-        console.log("file", file);
         if (file === "") {
             res.status(HttpStatus.BAD_REQUEST).json({error: "Неверные параметры"});
             return

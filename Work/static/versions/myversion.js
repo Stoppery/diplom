@@ -1,8 +1,6 @@
 async function showVersion(){
     let searchURL = new URL(document.location.href);
     let version = searchURL.searchParams.get("ver");
-    //let version = document.location.search.substring(document.location.search.indexOf('=') + 1);
-    // console.log(version);
    fetch(`http://localhost:3000/api/versions?ver=${version}`, {
         method: 'GET',
         headers: {
@@ -31,7 +29,8 @@ async function showVersion(){
             let saveasbutton = document.createElement("input");
             let tdSaveAsBut = document.createElement("td");
             saveasbutton.type = "button";
-            saveasbutton.addEventListener("click", () => document.location.href = `../versions/create?ver=${version}`);
+            // saveasbutton.addEventListener("click", () => document.location.href = `../versions/create?ver=${version}`);
+            saveasbutton.addEventListener("click", () => showCreateVersionForm());
             saveasbutton.value = "Создать новую версию";
             saveasbutton.title = "Создание новой версии на базе текущей";
             saveasbutton.setAttribute("class", "button-table");
@@ -121,6 +120,13 @@ function saveVersion(version) {
     showVersion();
 }
 
+function showCreateVersionForm() {
+    document.getElementById("createVersionForm").style.display = "block";
+}
+
+function closeCreateVersionForm() {
+    document.getElementById("createVersionForm").style.display = "none";
+}
 
 function showForm() {
     document.getElementById("versionForm").style.display = "block";
@@ -130,9 +136,45 @@ function closeForm() {
     document.getElementById("versionForm").style.display = "none";
 }
 
+function createVersion() {
+    let nameInput = document.getElementById("nameNewVersion");
+    let searchURL = new URL(document.location.href);
+    let rootId = searchURL.searchParams.get("ver");
+    let version = {
+        name: nameInput.value,
+        rootver: rootId,
+    };
+
+    fetch('http://localhost:3000/api/versions/create', {
+        method: 'POST',
+        body: JSON.stringify(version),
+        headers: {
+            'Content-Type': 'application/json',
+            'Charset': 'utf-8'
+        },
+    }).then(response => {
+        if (response.status >= 300) {
+            response.json().then(response => {
+                let error = document.getElementById("error");
+                error.innerText = response.error;
+            });
+        } else {
+            nameInput.value = "";
+            response.json().then(response => {
+                let idVer = response.idV;
+                window.location.href = `/versions?ver=${idVer}`;
+            });
+            
+        }
+    });
+
+}
+
 function createProjectInV() {
-    let version = document.location.search.substring(document.location.search.indexOf('=') + 1);
     let nameInput = document.getElementById("file");
+    let searchURL = new URL(document.location.href);
+    let version = searchURL.searchParams.get("ver");
+    console.log(version);
 
     let project = {
         file: nameInput.value,
@@ -158,9 +200,10 @@ function createProjectInV() {
                 let message = document.getElementById("message");
                 message.innerText = response.message;
             });
+            window.location.href = `../projects`;
         }
     });
-    window.location.href = `../projects`;
+    
 }
 
 function showTagForm() {
@@ -234,6 +277,8 @@ function addTag(){
                 let error = document.getElementById("error");
                 error.innerText = response.error;
             });
+        }else {
+            nameInput.value = "";
         } 
     })
     saveVersion(tag.id);

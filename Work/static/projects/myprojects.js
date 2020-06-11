@@ -58,14 +58,14 @@ async function showprojects() {
 
                 let button = document.createElement("input");
                 button.type = "button";
-                button.addEventListener("click", () => showversions(response.projects[i].file));
+                button.addEventListener("click", () => showversions(response.projects[i].id));
                 button.value = "Редактировать";
                 button.title = "Просмотр версий проекта или создание первой версии";
                 button.setAttribute("class", "button-table");
 
                 let delbutton = document.createElement("input");
                 delbutton.type = "button";
-                delbutton.addEventListener("click", () => deleteProject(response.projects[i].file))
+                delbutton.addEventListener("click", () => deleteProject(response.projects[i].id))
                 delbutton.value = "Удалить";
                 delbutton.title = "Удаление проекта, включая все версии";
                 delbutton.setAttribute("class", "button-table");

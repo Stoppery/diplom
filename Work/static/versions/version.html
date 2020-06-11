@@ -34,6 +34,14 @@
               <button type="button" class="btn cancel" onclick="closeForm()">Закрыть</button>
             </form>
           </div>
+          <div class="form-popup" id="createVersionForm">
+          <form action="#" class="form-container">
+            <label for="nameNewVersion"><b>Название версии</b></label>
+            <input id="nameNewVersion" type="text" placeholder="Version 1" name="nameNewVersion" required>
+            <button type="button" class="btn btn-primary" onclick="createVersion()">Создать</button>
+            <button type="button" class="btn cancel" onclick="closeCreateVersionForm()">Закрыть</button>
+        </form>
+    </div>
         <div class="container row">
            <h1 id="ver">Version </h1>
             <div id="proj" class="themed-grid-col col-sm-8 pull-center">
