@@ -8,13 +8,7 @@ async function showprojects() {
     let modStart = searchURL.searchParams.get("dateModSt");
     let modEnd = searchURL.searchParams.get("dateModEnd");
     let tags = searchURL.searchParams.get("tags");
-    
-    /*console.log("name", nameInput);
-    console.log(authorInput);
-    console.log(createStart);
-    console.log(createEnd);
-    console.log(modStart);
-    console.log(modEnd);*/
+   
     fetch(`http://localhost:3000/api/search?name=${nameInput}&author=${authorInput}&dateCrSt=${createStart}&dateCrEnd=${createEnd}&dateModSt=${modStart}&dateModEnd=${modEnd}&tags=${tags}`, {
         method: 'GET',
         headers: {
@@ -76,14 +70,14 @@ async function showprojects() {
                 if(response.projects[i].isAuthor){
                     let button = document.createElement("input");
                     button.type = "button";
-                    button.addEventListener("click", () => showversions(response.projects[i].file));
+                    button.addEventListener("click", () => showversions(response.projects[i].id));
                     button.value = "Редактировать";
                     button.title = "Просмотр версий проекта или создание первой версии";
                     button.setAttribute("class", "button-table");
 
                     let delbutton = document.createElement("input");
                     delbutton.type = "button";
-                    delbutton.addEventListener("click", () => deleteProject(response.projects[i].file))
+                    delbutton.addEventListener("click", () => deleteProject(response.projects[i].id))
                     delbutton.value = "Удалить";
                     delbutton.title = "Удаление проекта, включая все версии";
                     delbutton.setAttribute("class", "button-table");
@@ -107,7 +101,7 @@ async function showprojects() {
                     let tdWBut = document.createElement("td");
                     watchbutton.type = "button";
                     watchbutton.value = "Версии";
-                    watchbutton.addEventListener("click",  () => showversions(response.projects[i].file));
+                    watchbutton.addEventListener("click",  () => showversions(response.projects[i].id));
                     watchbutton.setAttribute("class", "button-table");
                     tdBut.appendChild(button);
                     tdWBut.appendChild(watchbutton);
@@ -137,9 +131,13 @@ function showversions(file) {
             let len = response.versions.length;
 
             for (let i = 0; i < len; i++) {
-                if (document.getElementById("ep" + response.versions[i].id)) {
-                    continue
+                let close = document.getElementById("ep" + response.versions[i].id);
+                  
+                if (close) {
+                    close.remove();
+                    continue;
                 }
+
 
                 let parentElement = document.getElementById(response.versions[i].root);
                 let tr = document.createElement("tr");
@@ -220,14 +218,14 @@ function showversions(file) {
                 parentElement.after(tr);
                     
             }
-            if (!document.getElementById("nametr")) {
+            if (!document.getElementById("nametr" + response.versions[len - 1].root)) {
                 let tdEmpty = document.createElement("td");
                 let tdName = document.createElement("td");
                 let tdDC = document.createElement("td");
                 let tdDM = document.createElement("td");
                 let tdA = document.createElement("td");
                 let trp = document.createElement("tr");
-                trp.setAttribute("id", "nametr")
+                trp.setAttribute("id", "nametr" + response.versions[len - 1].root)
                 tdName.innerText = "Название";
                 tdDC.innerText = "Дата создания";
                 tdDM.innerText = "Дата изменения";
@@ -239,6 +237,8 @@ function showversions(file) {
                 trp.appendChild(tdA);
                 let parentElement = document.getElementById(response.versions[len - 1].root);
                 parentElement.after(trp);
+            } else {
+                document.getElementById("nametr" + response.versions[len - 1].root).remove();
             }
 
             

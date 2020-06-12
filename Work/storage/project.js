@@ -55,7 +55,7 @@ module.exports.project = {
     },
 
     createProject: function(conn, email, project){
-        let row = conn.querySync(`SELECT id FROM users WHERE email = '${email}'`);
+        let row = this.getUserId(conn,email);
         if(row.length > 0){
             let idUs = row[0].id;
             let samename = this.checkName(conn, idUs, project);
@@ -68,13 +68,11 @@ module.exports.project = {
                 conn.querySync(`INSERT into project(file, datecreation, datelastmodified, depth, author)` + 
                 `VALUES('${project.file}','${project.datecreate}','${project.datemodified}',${project.depth}, ${idUs});`);
                 return {
-                    message: "Проект успешно создан",
                     error: null
                 }
             }
         } else { 
             return {
-                message: null,
                 error: "Пользователь не найден"
              }
         }
@@ -89,50 +87,50 @@ module.exports.project = {
                 conn.querySync(`DELETE FROM version WHERE id = '${resId}'`);
             }
         }
+        conn.querySync(`DELETE FROM project_tag WHERE project = ${file}`);
         conn.querySync(`DELETE FROM project WHERE id = '${file}'`);
+        
     },
 
    createProjectInV: function(conn, email, project){
-    let row = conn.querySync(`SELECT id FROM users WHERE email = '${email}'`);
+    let row = this.getUserId(conn,email);
     if(row.length > 0){
         let idUs = row[0].id;
         let samename = this.checkName(conn, idUs, project);
         if(samename) {
            return {
-               message: null,
                error: "Проект с данным именем уже существует. Пожалуйста, выберете другое имя"
             }
         } else {
-            let row = conn.querySync(`SELECT version, data, depth FROM version JOIN project ON proot = project.id WHERE version.id = ${project.rootver}`);
+            let row = conn.querySync(`SELECT version, data, depth, proot FROM version JOIN project ON proot = project.id WHERE version.id = ${project.rootver}`);
             if(row.length > 0){  
                 conn.querySync(`INSERT into project(file, datecreation, datelastmodified, depth, author)` + 
-                `VALUES('${project.file}','${project.datecreate}','${project.datemodified}',${row[0].depth}, ${idUs});`);
-                let res = conn.querySync(`SELECT id FROM project WHERE file ='${project.file}' AND author = ${idUs}`);
-                
-                if(res.length > 0){
-                    conn.querySync(`INSERT into version(version, datecreation, datemodified, data, proot, authorv)` + 
-                    `VALUES('${row[0].version}', '${project.datecreate}', '${project.datecreate}', '${row[0].data}', ${res[0].id}, ${idUs});`);
+                    `VALUES('${project.file}','${project.datecreate}','${project.datemodified}',${row[0].depth}, ${idUs});`);
+                let newVersion = this.createVersionFromParent(conn, row, project, idUs);
+                console.log(newVersion);
+                if(newVersion.error != null) {
                     return {
-                        message: "Проект успешно создан",
+                        error: newVersion.error
+                    }
+                } else {
+                    this.addParentTags(newVersion.idP, row[0].proot, conn);
+                    return {
                         error: null
-                        }
-                }else {
-                    conn.querySync(`DELETE FROM project WHERE file = '${project.file} AND author = ${idUs}'`);
-                    return {
-                        message: null,
-                        error: "Не удалось создать проект"
-                     }
+                    }
                 }
-               
             }
         }
     } else { 
         return {
-            message: null,
             error: "Пользователь не найден"
          }
     }
    },
+
+   getUserId: function(conn, email){
+    let rows = conn.querySync(`SELECT id FROM users WHERE email='${email}'`);
+    return rows;
+    },   
 
    checkName: function(conn, idUs, project){
     let res = conn.querySync(`SELECT file FROM project WHERE author = '${idUs}'`);
@@ -145,6 +143,34 @@ module.exports.project = {
         }
     } 
     return samename;
+    },
+
+    createVersionFromParent: function(conn, row, project, idUs){
+        let res = conn.querySync(`SELECT id FROM project WHERE file ='${project.file}' AND author = ${idUs}`);
+            if(res.length > 0){
+                conn.querySync(`INSERT into version(version, datecreation, datemodified, data, proot, authorv)` + 
+                    `VALUES('${row[0].version}', '${project.datecreate}', '${project.datecreate}', '${row[0].data}', ${res[0].id}, ${idUs});`);
+                return {
+                        error: null,
+                        idP: res[0].id
+                        }
+            }else {
+                conn.querySync(`DELETE FROM project WHERE file = '${project.file} AND author = ${idUs}'`);
+                return {
+                        error: "Не удалось создать проект",
+                        idP: null
+                     }
+            }
+    },
+
+    addParentTags: function(projectId, rootId, conn){
+        let row = conn.querySync(`SELECT tag FROM project_tag WHERE project=${rootId}`);
+        if(row.length > 0){
+            for(let i = 0; i < row.length; i++){
+                conn.querySync(`INSERT into project_tag(tag, project) VALUES(${row[i].tag}, ${projectId});`);
+            }
+        }
+        return
     },
 
    addTag: function(conn, tag){
@@ -251,7 +277,7 @@ module.exports.project = {
         }
     }
   
-    console.log(endQuery);
+    // console.log(endQuery);
     
     if(flag) {
         orderQuery = endQuery + ` ORDER BY p.id`;
@@ -267,37 +293,12 @@ module.exports.project = {
     };
 
     if (rows.length > 0) {
-        for (let i = 0, j = 1; i < rows.length; i++, j++) {
+
+        if(flag){
+            result = this.resultForTags(rows, email, result);
+        }else{
+        for (let i = 0; i < rows.length; i++) {
             let check = (rows[i].email === email)?true:false;
-            if(flag){
-                let capt = false;
-                if(i != rows.length-1 && rows[i].id == rows[j].id) {
-                    capt = true;
-                    if(!capt){
-                            result.projects.unshift({
-                                id: rows[i].id,
-                                file: rows[i].file,
-                                datecreate: rows[i].datecreation,
-                                datemodified: rows[i].datelastmodified,
-                                author: rows[i].name,
-                                depth: rows[i].depth,
-                                isAuthor: check,
-                            })
-                    }else {
-                        capt = false;
-                    }
-                }else if(!capt){
-                        result.projects.push({
-                            id: rows[i].id,
-                            file: rows[i].file,
-                            datecreate: rows[i].datecreation,
-                            datemodified: rows[i].datelastmodified,
-                            author: rows[i].name,
-                            depth: rows[i].depth,
-                            isAuthor: check,
-                        })
-                    }
-            }else {
                 result.projects.push({
                     id: rows[i].id,
                     file: rows[i].file,
@@ -313,7 +314,7 @@ module.exports.project = {
         return result;
     }
     result.error = "Проекты не найдены. Попробуйте изменить параметры поиска";
-    return result
+    return result;
 },
     searchKey: function (keys, i){
             switch(keys[i]){
@@ -380,5 +381,47 @@ module.exports.project = {
         }
     },
 
+    resultForTags: function(rows, email, result){
+        let quantity = [];
+            let summa = 1;
+            for(let k = 0; k < rows.length -1; k++){
+                if(rows[k].id == rows[k+1].id){
+                    summa += 1;
+                    if(k == rows.length - 2){
+                        quantity.push({
+                            id: rows[k].id,
+                            k: k+1,
+                            sum: summa,
+                        })
+                    }
+                } else { 
+                    quantity.push({
+                        id: rows[k].id,
+                        k: k,
+                        sum: summa,
+                    })
+                    summa = 1;
+                }
+            }
+            quantity.sort(function(a, b){
+                return a.sum-b.sum
+              }).reverse()
+
+        
+            for (let i = 0; i < quantity.length; i++) {
+                let ind = quantity[i].k;
+                let check = (rows[ind].email === email)?true:false;
+                result.projects.push({
+                    id: rows[ind].id,
+                    file: rows[ind].file,
+                    datecreate: rows[ind].datecreation,
+                    datemodified: rows[ind].datelastmodified,
+                    author: rows[ind].name,
+                    depth: rows[ind].depth,
+                    isAuthor: check,
+                })
+            }
+            return result;
+    }
    
 }

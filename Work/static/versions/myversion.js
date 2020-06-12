@@ -196,14 +196,10 @@ function createProjectInV() {
             });
         } else {
             nameInput.value = "";
-            response.json().then(response => {
-                let message = document.getElementById("message");
-                message.innerText = response.message;
-            });
             window.location.href = `../projects`;
         }
     });
-    
+
 }
 
 function showTagForm() {
@@ -272,13 +268,13 @@ function addTag(){
             'Charset': 'utf-8',
         },
     }).then(response => {
-        if (response.status !== 200) {
+        if (response.status >= 300) {
             response.json().then(response => {
                 let error = document.getElementById("error");
                 error.innerText = response.error;
             });
         }else {
-            nameInput.value = "";
+            nameInput.value = ""
         } 
     })
     saveVersion(tag.id);

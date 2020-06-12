@@ -48,7 +48,7 @@ async function showallprojects(){
                 let tdWBut = document.createElement("td");
                 watchbutton.type = "button";
                 watchbutton.value = "Версии";
-                watchbutton.addEventListener("click",  () => showversions(response.projects[i].file));
+                watchbutton.addEventListener("click",  () => showversions(response.projects[i].id));
                 watchbutton.setAttribute("class", "button-table");
                 
                 let tempdatecreate = new Date(response.projects[i].datecreate).toLocaleString("ru");
@@ -91,9 +91,13 @@ function showversions(file) {
                 return
             }
             console.log(response.versions.length);
-            for (let i = 0; i < response.versions.length; i++) {
-                if (document.getElementById("ep" + response.versions[i].id)) {
-                    continue
+            let len = response.versions.length;
+            for (let i = 0; i < len; i++) {
+                let close = document.getElementById("ep" + response.versions[i].id);
+                  
+                if (close) {
+                    close.remove();
+                    continue;
                 }
                 console.log(response.versions[i]);
                 let parentElement = document.getElementById(response.versions[i].root);
@@ -141,14 +145,14 @@ function showversions(file) {
 
                 parentElement.after(tr);
             }
-            if (!document.getElementById("nametr")) {
+            if (!document.getElementById("nametr" + response.versions[len - 1].root)) {
                 let tdEmpty = document.createElement("td");
                 let tdName = document.createElement("td");
                 let tdDC = document.createElement("td");
                 let tdDM = document.createElement("td");
                 let tdA = document.createElement("td");
                 let trp = document.createElement("tr");
-                trp.setAttribute("id", "nametr")
+                trp.setAttribute("id", "nametr" + response.versions[len - 1].root)
                 tdName.innerText = "Название";
                 tdDC.innerText = "Дата создания";
                 tdDM.innerText = "Дата изменения";
@@ -158,8 +162,10 @@ function showversions(file) {
                 trp.appendChild(tdDC);
                 trp.appendChild(tdDM);
                 trp.appendChild(tdA);
-                let parentElement = document.getElementById(response.versions[0].root);
+                let parentElement = document.getElementById(response.versions[len - 1].root);
                 parentElement.after(trp);
+            } else {
+                document.getElementById("nametr" + response.versions[len - 1].root).remove();
             }
         });
 

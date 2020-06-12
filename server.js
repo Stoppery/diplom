@@ -445,7 +445,7 @@ app.route('/api/projects')
             res.status(HttpStatus.INTERNAL_SERVER_ERROR).json({error: projectData.error});
             return;
         }
-        res.status(HttpStatus.CREATED);
+        res.sendStatus(HttpStatus.CREATED);
     })
     .delete((req, res) => {
         if (!req.cookies.user) {
@@ -530,11 +530,12 @@ app.route('/api/projects/version')
             datemodified: dateCreate,
             rootver: req.body.rootver,
         });
+
         if (projectData.error) {
             res.status(HttpStatus.INTERNAL_SERVER_ERROR).json({error: projectData.error});
             return;
         }
-        res.status(HttpStatus.CREATED).json({message: projectData.message});
+        res.sendStatus(HttpStatus.CREATED);
     });
 
 
@@ -573,7 +574,7 @@ app.route('/api/versions')
             id: req.body.id,
             datemodified: req.body.datemodified,
         });
-        res.status(HttpStatus.OK);
+        res.sendStatus(HttpStatus.OK);
     });
 
 
@@ -620,7 +621,7 @@ app.route('/api/versions/tag')
             res.status(HttpStatus.INTERNAL_SERVER_ERROR).json({error: projectData.error});
             return;
         }
-        res.status(HttpStatus.CREATED);
+        res.sendStatus(HttpStatus.CREATED);
     })
     .delete((req, res) => {
         if (!req.cookies.user) {
