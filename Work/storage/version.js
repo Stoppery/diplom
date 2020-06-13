@@ -30,9 +30,9 @@ module.exports.version = {
         if (rows.length > 0) {
             let idAuth = rows[0].id;
             let newDate = new Date().toUTCString();
-            conn.querySync(`INSERT INTO version(version, datecreation, datemodified, authorv, proot) ` +
-                `VALUES('version 1', '${newDate}', '${newDate}', '${idAuth}', '${file}');`);
-            conn.querySync(`UPDATE project SET datelastmodified = '${newDate}' WHERE id = ${file}`);
+            conn.querySync(`WITH new_version as (INSERT INTO version(version, datecreation, datemodified, authorv, proot) ` +
+                `VALUES('version 1', '${newDate}', '${newDate}', '${idAuth}', '${file}')) ` + 
+                `UPDATE project SET datelastmodified = '${newDate}' WHERE id = ${file}`);
         }
         return this.getVersions(conn, email, file);
     },
@@ -43,10 +43,10 @@ module.exports.version = {
         let rowroot = conn.querySync(`SELECT proot, data FROM version WHERE id = '${version.rootver}'`);
         if(rowid.length > 0 && rowroot.length > 0){
             let idUs = rowid[0].id;
-            conn.querySync(`INSERT into version(version, datecreation, datemodified, data, proot, authorv)` + 
-            `VALUES('${version.version}','${version.datecreate}','${version.datecreate}','${rowroot[0].data}', ${rowroot[0].proot}, ${idUs});`);
-            conn.querySync(`UPDATE project SET datelastmodified = '${version.datecreate}' WHERE id = ${rowroot[0].proot}`);
-            let res = conn.querySync(`SELECT id FROM version WHERE version = '${version.version}'`);
+            let res = conn.querySync(`WITH upt_p as (UPDATE project SET datelastmodified = '${version.datecreate}' WHERE id = ${rowroot[0].proot}) ` + 
+            `INSERT into version(version, datecreation, datemodified, data, proot, authorv)` + 
+            `VALUES('${version.version}','${version.datecreate}','${version.datecreate}','${rowroot[0].data}', ${rowroot[0].proot}, ${idUs}) RETURNING id;`);
+            
             return {
                 message: "Версия успешно создана",
                 id: res[0].id,
@@ -66,10 +66,10 @@ module.exports.version = {
     },    
 
     deleteVersion: function(conn, idV){
-        let row = conn.querySync(`SELECT proot FROM version WHERE id = '${idV}'`);
-        conn.querySync(`DELETE FROM version WHERE id = '${idV}'`);
         let newDate = new Date().toUTCString();
-        conn.querySync(`UPDATE project SET datelastmodified = '${newDate}' WHERE id = ${row[0].proot}`);
+        let row = conn.querySync(`WITH parent as (DELETE FROM version WHERE id = '${idV}' RETURNING proot) ` +
+        `UPDATE project SET datelastmodified = '${newDate}' WHERE id in (SELECT proot FROM parent) RETURNING id`);
+        console.log(row);
     },
 
     showVersion: function(conn, idV){
@@ -106,9 +106,7 @@ module.exports.version = {
     },
 
     saveVersion: function(conn, version){
-        conn.querySync(`UPDATE version SET datemodified = '${version.datemodified}' WHERE id = ${version.id}`);
-        let row = conn.querySync(`SELECT proot FROM version WHERE id = ${version.id}`);
-        conn.querySync(`UPDATE project SET datelastmodified ='${version.datemodified}' WHERE id = ${row[0].proot}`);
-        
+        conn.querySync(`WITH parent as (UPDATE version SET datemodified = '${version.datemodified}' WHERE id = ${version.id} RETURNING proot) ` + 
+            `UPDATE project SET datelastmodified ='${version.datemodified}' WHERE id in (SELECT proot FROM parent)`);
     }
 };

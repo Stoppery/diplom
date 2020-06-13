@@ -25,7 +25,7 @@ module.exports.project = {
             return result;
         }
 
-        result.error = "Can`t get projects";
+        result.error = "Не удалось получить информацию о проектах";
         return result
     },
 
@@ -50,7 +50,7 @@ module.exports.project = {
             return result;
         }
 
-        result.error = "В вашей компании еще нет проектов";
+        result.error = "В вашей компании нет других проектов";
         return result
     },
 
@@ -61,12 +61,12 @@ module.exports.project = {
             let samename = this.checkName(conn, idUs, project);
             if(samename) {
                return {
-                   message: null,
                    error: "Проект с данным именем уже существует. Пожалуйста, выберете другое имя"
                 }
             } else {
-                conn.querySync(`INSERT into project(file, datecreation, datelastmodified, depth, author)` + 
-                `VALUES('${project.file}','${project.datecreate}','${project.datemodified}',${project.depth}, ${idUs});`);
+                let res = conn.querySync(`INSERT into project(file, datecreation, datelastmodified, depth, author)` +
+                `VALUES('${project.file}','${project.datecreate}','${project.datemodified}',${project.depth}, ${idUs})` + ` RETURNING id;`);
+                console.log(res);
                 return {
                     error: null
                 }
@@ -88,7 +88,8 @@ module.exports.project = {
             }
         }
         conn.querySync(`DELETE FROM project_tag WHERE project = ${file}`);
-        conn.querySync(`DELETE FROM project WHERE id = '${file}'`);
+        let res = conn.querySync(`DELETE FROM project WHERE id = '${file}' RETURNING id`);
+        console.log(res);
         
     },
 
@@ -176,10 +177,11 @@ module.exports.project = {
    addTag: function(conn, tag){
     let row = conn.querySync(`SELECT authorv, proot FROM version WHERE id=${tag.rootver}`);
     if(row.length > 0){
-        conn.querySync(`INSERT INTO tag(description) VALUES('${tag.description}') ON CONFLICT(description) DO NOTHING`);
-        let res = conn.querySync(`SELECT id FROM tag WHERE description = '${tag.description}'`);
-        if(res.length > 0){
-            conn.querySync(`INSERT INTO project_tag(tag, project) VALUES(${res[0].id}, ${row[0].proot});`);
+        let idNew = conn.querySync(`WITH new_tag as (INSERT INTO tag(description) VALUES('${tag.description}') ON CONFLICT(description) DO NOTHING RETURNING *) ` +
+        `SELECT id FROM new_tag WHERE description = '${tag.description}'`);
+        console.log(idNew);
+        if(idNew.length > 0){
+            conn.querySync(`INSERT INTO project_tag(tag, project) VALUES(${idNew[0].id}, ${row[0].proot});`);
             return {
                 error: null
             }   
