@@ -90,7 +90,6 @@ module.exports.project = {
         conn.querySync(`DELETE FROM project_tag WHERE project = ${file}`);
         let res = conn.querySync(`DELETE FROM project WHERE id = '${file}' RETURNING id`);
         console.log(res);
-        
     },
 
    createProjectInV: function(conn, email, project){
@@ -105,16 +104,17 @@ module.exports.project = {
         } else {
             let row = conn.querySync(`SELECT version, data, depth, proot FROM version JOIN project ON proot = project.id WHERE version.id = ${project.rootver}`);
             if(row.length > 0){  
-                conn.querySync(`INSERT into project(file, datecreation, datelastmodified, depth, author)` + 
-                    `VALUES('${project.file}','${project.datecreate}','${project.datemodified}',${row[0].depth}, ${idUs});`);
-                let newVersion = this.createVersionFromParent(conn, row, project, idUs);
+                let newProject = conn.querySync(`INSERT into project(file, datecreation, datelastmodified, depth, author)` + 
+                    `VALUES('${project.file}','${project.datecreate}','${project.datemodified}',${row[0].depth}, ${idUs}) RETURNING id;`);
+                    console.log(newProject);
+                let newVersion = this.createVersionFromParent(conn, row, project, idUs, newProject);
                 console.log(newVersion);
                 if(newVersion.error != null) {
                     return {
                         error: newVersion.error
                     }
                 } else {
-                    this.addParentTags(newVersion.idP, row[0].proot, conn);
+                    this.addParentTags(newProject[0].id, row[0].proot, conn);
                     return {
                         error: null
                     }
@@ -146,14 +146,14 @@ module.exports.project = {
     return samename;
     },
 
-    createVersionFromParent: function(conn, row, project, idUs){
-        let res = conn.querySync(`SELECT id FROM project WHERE file ='${project.file}' AND author = ${idUs}`);
-            if(res.length > 0){
-                conn.querySync(`INSERT into version(version, datecreation, datemodified, data, proot, authorv)` + 
-                    `VALUES('${row[0].version}', '${project.datecreate}', '${project.datecreate}', '${row[0].data}', ${res[0].id}, ${idUs});`);
+    createVersionFromParent: function(conn, row, project, idUs, newProject){
+        console.log(newProject[0].id);    
+        if(newProject[0].id){
+                let newVersion = conn.querySync(`INSERT into version(version, datecreation, datemodified, data, proot, authorv)` + 
+                    `VALUES('${row[0].version}', '${project.datecreate}', '${project.datecreate}', '${row[0].data}', ${newProject[0].id}, ${idUs}) RETURNING id;`);
                 return {
                         error: null,
-                        idP: res[0].id
+                        idP: newVersion[0].id
                         }
             }else {
                 conn.querySync(`DELETE FROM project WHERE file = '${project.file} AND author = ${idUs}'`);
@@ -177,9 +177,8 @@ module.exports.project = {
    addTag: function(conn, tag){
     let row = conn.querySync(`SELECT authorv, proot FROM version WHERE id=${tag.rootver}`);
     if(row.length > 0){
-        let idNew = conn.querySync(`WITH new_tag as (INSERT INTO tag(description) VALUES('${tag.description}') ON CONFLICT(description) DO NOTHING RETURNING *) ` +
-        `SELECT id FROM new_tag WHERE description = '${tag.description}'`);
-        console.log(idNew);
+        conn.querySync(`INSERT INTO tag(description) VALUES('${tag.description}') ON CONFLICT(description) DO NOTHING`);
+        idNew = conn.querySync(`SELECT id FROM tag WHERE description = '${tag.description}'`);
         if(idNew.length > 0){
             conn.querySync(`INSERT INTO project_tag(tag, project) VALUES(${idNew[0].id}, ${row[0].proot});`);
             return {
@@ -193,7 +192,7 @@ module.exports.project = {
        
     } else {
         return {
-            error: "Что-то пошло не так",
+            error: "Что-то пошло не так при получении информации",
         }
     }
    },
@@ -252,6 +251,7 @@ module.exports.project = {
             delete filters[key];
         }
     }
+
     
     keys = Object.keys(filters);
     if (typeof filters['tag'] !== "undefined") {
@@ -268,7 +268,11 @@ module.exports.project = {
     let lastQuery = ``;
     let orderQuery = ``;
 
-    endQuery += startQuery + `WHERE`;
+    if(count > 1){
+        endQuery += startQuery + `WHERE`;
+    }else {
+        endQuery += startQuery;
+    }
 
     for(let i = 1; i <= count; i++ ) {
         fieldName = this.searchKey(keys, i - 1);
@@ -279,7 +283,7 @@ module.exports.project = {
         }
     }
   
-    // console.log(endQuery);
+    console.log(endQuery);
     
     if(flag) {
         orderQuery = endQuery + ` ORDER BY p.id`;
@@ -371,7 +375,7 @@ module.exports.project = {
                     let query = ``;
                     for(let i = 0; i < arrayOfStrings.length; i++){
                         query += ` ${fieldName} = '${arrayOfStrings[i]}'`;
-                        if(i != arrayOfStrings.length - 1){
+                        if(i != arrayOfStrings.length - 1 && arrayOfStrings.length != 1){
                             query += ` OR`; 
                         }
                     }

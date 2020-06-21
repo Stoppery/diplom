@@ -23,8 +23,8 @@ const pgUser = "nika";
 const pgPassword = "qwerty";
 const pgPort = "5432"
 
-const maxProjectCount = 10;
-const maxProjectSubscribeCount = 20;
+const maxProjectCount = 30;
+const maxProjectSubscribeCount = 40;
 
 const app = express();
 
